@@ -1,0 +1,53 @@
+name: student-enrollment-system
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: student_enrollment_postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
+
+    volumes:
+      - student_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+    networks:
+      - student_network
+
+  adminer:
+    image: adminer:4
+    container_name: student_enrollment_adminer
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    ports:
+      - "18080:8080"
+
+    networks:
+      - student_network
+
+volumes:
+  student_postgres_data:
+    name: student_enrollment_postgres_data
+
+networks:
+  student_network:
+    name: student_enrollment_network
