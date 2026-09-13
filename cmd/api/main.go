@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/anita-bakhshi/student-enrollment-system/internal/config"
 	"github.com/anita-bakhshi/student-enrollment-system/internal/handler"
 	"github.com/anita-bakhshi/student-enrollment-system/internal/repository"
 	"github.com/anita-bakhshi/student-enrollment-system/internal/service"
@@ -16,6 +17,12 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
+	cfg, err := config.Load()
+	if err != nil {
+		slog.Error("failed to load configuration", "error", err)
+		os.Exit(1)
+	}
+
 	studentRepository := repository.NewMemoryStudentRepository()
 	studentService := service.NewStudentService(studentRepository)
 	studentHandler := handler.NewStudentHandler(studentService)
@@ -23,17 +30,18 @@ func main() {
 	router := handler.NewRouter(studentHandler)
 
 	server := &http.Server{
-		Addr:              ":8081",
+		Addr:              cfg.HTTPAddress,
 		Handler:           router,
 		ReadHeaderTimeout: 5 * time.Second,
-		ReadTimeout:       10 * time.Second,
-		WriteTimeout:      10 * time.Second,
-		IdleTimeout:       60 * time.Second,
+		ReadTimeout:       cfg.ReadTimeout,
+		WriteTimeout:      cfg.WriteTimeout,
+		IdleTimeout:       cfg.IdleTimeout,
 	}
 
 	slog.Info(
 		"starting server",
-		"address", "http://localhost:8081",
+		"environment", cfg.AppEnvironment,
+		"address", cfg.HTTPAddress,
 	)
 
 	if err := server.ListenAndServe(); err != nil &&
