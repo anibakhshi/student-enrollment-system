@@ -1,6 +1,10 @@
 package handler
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/anita-bakhshi/student-enrollment-system/internal/middleware"
+)
 
 // NewRouter creates and configures all application routes.
 func NewRouter(studentHandler *StudentHandler) http.Handler {
@@ -23,5 +27,8 @@ func NewRouter(studentHandler *StudentHandler) http.Handler {
 		studentHandler.Create,
 	)
 
-	return mux
+	handler := middleware.Logging(mux)
+	handler = middleware.RequestID(handler)
+
+	return handler
 }
