@@ -22,9 +22,40 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
     ports:
       - "8081:8081"
+
+    networks:
+      - student_network
+
+  migrate:
+    image: postgres:16-alpine
+    container_name: student_enrollment_migrate
+    restart: "no"
+
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    volumes:
+      - ./migrations:/migrations:ro
+
+    command:
+      - /bin/sh
+      - -c
+      - >
+        psql
+        --host=postgres
+        --username=${POSTGRES_USER}
+        --dbname=${POSTGRES_DB}
+        --set=ON_ERROR_STOP=1
+        --file=/migrations/000001_create_students.up.sql
 
     networks:
       - student_network
