@@ -1,6 +1,34 @@
 name: student-enrollment-system
 
 services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: student-enrollment-api:local
+    container_name: student_enrollment_api
+    restart: unless-stopped
+    init: true
+
+    environment:
+      APP_ENV: docker
+      APP_PORT: 8081
+      HTTP_READ_TIMEOUT: 10s
+      HTTP_WRITE_TIMEOUT: 10s
+      HTTP_IDLE_TIMEOUT: 60s
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    ports:
+      - "8081:8081"
+
+    networks:
+      - student_network
+
   postgres:
     image: postgres:16-alpine
     container_name: student_enrollment_postgres
