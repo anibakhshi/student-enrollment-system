@@ -288,3 +288,80 @@ func TestCustomRequestID(t *testing.T) {
 		)
 	}
 }
+func TestUpdateStudentEndpoint(t *testing.T) {
+	router := setupTestRouter()
+
+	requestBody := `{
+		"first_name": "Anita Updated",
+		"last_name": "Bakhshi",
+		"age": 21,
+		"national_code": "0012345678",
+		"email": "anita.updated@example.com",
+		"phone": "09121111111"
+	}`
+
+	request := httptest.NewRequest(
+		http.MethodPut,
+		"/api/v1/students/1",
+		strings.NewReader(requestBody),
+	)
+	request.Header.Set("Content-Type", "application/json")
+
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusOK {
+		t.Fatalf(
+			"expected status %d, but got %d; body: %s",
+			http.StatusOK,
+			response.Code,
+			response.Body.String(),
+		)
+	}
+
+	if !strings.Contains(
+		response.Body.String(),
+		`"first_name":"Anita Updated"`,
+	) {
+		t.Error("expected response to contain updated student")
+	}
+}
+
+func TestDeleteStudentEndpoint(t *testing.T) {
+	router := setupTestRouter()
+
+	deleteRequest := httptest.NewRequest(
+		http.MethodDelete,
+		"/api/v1/students/2",
+		nil,
+	)
+	deleteResponse := httptest.NewRecorder()
+
+	router.ServeHTTP(deleteResponse, deleteRequest)
+
+	if deleteResponse.Code != http.StatusNoContent {
+		t.Fatalf(
+			"expected status %d, but got %d; body: %s",
+			http.StatusNoContent,
+			deleteResponse.Code,
+			deleteResponse.Body.String(),
+		)
+	}
+
+	getRequest := httptest.NewRequest(
+		http.MethodGet,
+		"/api/v1/students/2",
+		nil,
+	)
+	getResponse := httptest.NewRecorder()
+
+	router.ServeHTTP(getResponse, getRequest)
+
+	if getResponse.Code != http.StatusNotFound {
+		t.Errorf(
+			"expected deleted student status %d, but got %d",
+			http.StatusNotFound,
+			getResponse.Code,
+		)
+	}
+}

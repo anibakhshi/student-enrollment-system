@@ -15,8 +15,18 @@ type Student struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
-// CreateStudentInput contains the information required to create a student.
+// CreateStudentInput contains information required to create a student.
 type CreateStudentInput struct {
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
+	Age          int    `json:"age"`
+	NationalCode string `json:"national_code"`
+	Email        string `json:"email"`
+	Phone        string `json:"phone"`
+}
+
+// UpdateStudentInput contains information required to update a student.
+type UpdateStudentInput struct {
 	FirstName    string `json:"first_name"`
 	LastName     string `json:"last_name"`
 	Age          int    `json:"age"`

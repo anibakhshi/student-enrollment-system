@@ -16,7 +16,7 @@ type PostgresStudentRepository struct {
 	pool *pgxpool.Pool
 }
 
-// NewPostgresStudentRepository creates a PostgreSQL student repository.
+// NewPostgresStudentRepository creates a PostgreSQL repository.
 func NewPostgresStudentRepository(
 	pool *pgxpool.Pool,
 ) *PostgresStudentRepository {
@@ -129,7 +129,7 @@ func (r *PostgresStudentRepository) GetByID(
 	return student, nil
 }
 
-// Create stores a student in PostgreSQL.
+// Create stores a new student.
 func (r *PostgresStudentRepository) Create(
 	ctx context.Context,
 	student model.Student,
@@ -189,6 +189,94 @@ func (r *PostgresStudentRepository) Create(
 	}
 
 	return student, nil
+}
+
+// Update replaces a student's editable information.
+func (r *PostgresStudentRepository) Update(
+	ctx context.Context,
+	id int,
+	student model.Student,
+) (model.Student, error) {
+	const query = `
+		UPDATE students
+		SET
+			first_name = $2,
+			last_name = $3,
+			age = $4,
+			national_code = $5,
+			email = $6,
+			phone = NULLIF($7, '')
+		WHERE id = $1
+		  AND deleted_at IS NULL
+		RETURNING
+			id,
+			first_name,
+			last_name,
+			age,
+			national_code,
+			email,
+			COALESCE(phone, ''),
+			created_at,
+			updated_at;
+	`
+
+	err := r.pool.QueryRow(
+		ctx,
+		query,
+		id,
+		student.FirstName,
+		student.LastName,
+		student.Age,
+		student.NationalCode,
+		student.Email,
+		student.Phone,
+	).Scan(
+		&student.ID,
+		&student.FirstName,
+		&student.LastName,
+		&student.Age,
+		&student.NationalCode,
+		&student.Email,
+		&student.Phone,
+		&student.CreatedAt,
+		&student.UpdatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.Student{}, ErrStudentNotFound
+		}
+
+		return model.Student{}, mapPostgresStudentError(err)
+	}
+
+	return student, nil
+}
+
+// Delete soft-deletes a student.
+func (r *PostgresStudentRepository) Delete(
+	ctx context.Context,
+	id int,
+) error {
+	const query = `
+		UPDATE students
+		SET
+			deleted_at = CURRENT_TIMESTAMP,
+			status = 'inactive'
+		WHERE id = $1
+		  AND deleted_at IS NULL;
+	`
+
+	commandTag, err := r.pool.Exec(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("soft-delete student: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return ErrStudentNotFound
+	}
+
+	return nil
 }
 
 // mapPostgresStudentError converts PostgreSQL errors to domain errors.

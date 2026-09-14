@@ -168,3 +168,65 @@ func TestStudentServiceRejectsDuplicateEmail(t *testing.T) {
 		)
 	}
 }
+func TestStudentServiceUpdate(t *testing.T) {
+	studentRepository := repository.NewMemoryStudentRepository()
+	studentService := NewStudentService(studentRepository)
+
+	input := model.UpdateStudentInput{
+		FirstName:    "  Anita Updated  ",
+		LastName:     "  Bakhshi  ",
+		Age:          21,
+		NationalCode: "0012345678",
+		Email:        "  ANITA.UPDATED@EXAMPLE.COM  ",
+		Phone:        "09121111111",
+	}
+
+	updatedStudent, err := studentService.Update(
+		context.Background(),
+		1,
+		input,
+	)
+	if err != nil {
+		t.Fatalf("expected no error, but got %v", err)
+	}
+
+	if updatedStudent.ID != 1 {
+		t.Errorf(
+			"expected student ID 1, but got %d",
+			updatedStudent.ID,
+		)
+	}
+
+	if updatedStudent.FirstName != "Anita Updated" {
+		t.Errorf(
+			"unexpected first name: %q",
+			updatedStudent.FirstName,
+		)
+	}
+
+	if updatedStudent.Email != "anita.updated@example.com" {
+		t.Errorf(
+			"unexpected normalized email: %q",
+			updatedStudent.Email,
+		)
+	}
+}
+
+func TestStudentServiceDelete(t *testing.T) {
+	studentRepository := repository.NewMemoryStudentRepository()
+	studentService := NewStudentService(studentRepository)
+
+	err := studentService.Delete(context.Background(), 2)
+	if err != nil {
+		t.Fatalf("expected no error, but got %v", err)
+	}
+
+	_, err = studentService.GetByID(context.Background(), 2)
+
+	if !errors.Is(err, repository.ErrStudentNotFound) {
+		t.Errorf(
+			"expected ErrStudentNotFound, but got %v",
+			err,
+		)
+	}
+}

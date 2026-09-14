@@ -74,7 +74,42 @@ func (s *StudentService) Create(
 	return s.repository.Create(ctx, student)
 }
 
-// normalizeCreateStudentInput removes unnecessary whitespace.
+// Update validates and updates an existing student.
+func (s *StudentService) Update(
+	ctx context.Context,
+	id int,
+	input model.UpdateStudentInput,
+) (model.Student, error) {
+	normalizeUpdateStudentInput(&input)
+
+	validationErrors := validateUpdateStudentInput(input)
+	if len(validationErrors) > 0 {
+		return model.Student{}, &ValidationError{
+			Fields: validationErrors,
+		}
+	}
+
+	student := model.Student{
+		FirstName:    input.FirstName,
+		LastName:     input.LastName,
+		Age:          input.Age,
+		NationalCode: input.NationalCode,
+		Email:        input.Email,
+		Phone:        input.Phone,
+	}
+
+	return s.repository.Update(ctx, id, student)
+}
+
+// Delete removes or soft-deletes an existing student.
+func (s *StudentService) Delete(
+	ctx context.Context,
+	id int,
+) error {
+	return s.repository.Delete(ctx, id)
+}
+
+// normalizeCreateStudentInput normalizes student creation fields.
 func normalizeCreateStudentInput(input *model.CreateStudentInput) {
 	input.FirstName = strings.TrimSpace(input.FirstName)
 	input.LastName = strings.TrimSpace(input.LastName)
@@ -83,38 +118,80 @@ func normalizeCreateStudentInput(input *model.CreateStudentInput) {
 	input.Phone = strings.TrimSpace(input.Phone)
 }
 
-// validateCreateStudentInput validates student information.
+// normalizeUpdateStudentInput normalizes student update fields.
+func normalizeUpdateStudentInput(input *model.UpdateStudentInput) {
+	input.FirstName = strings.TrimSpace(input.FirstName)
+	input.LastName = strings.TrimSpace(input.LastName)
+	input.NationalCode = strings.TrimSpace(input.NationalCode)
+	input.Email = strings.ToLower(strings.TrimSpace(input.Email))
+	input.Phone = strings.TrimSpace(input.Phone)
+}
+
+// validateCreateStudentInput validates student creation fields.
 func validateCreateStudentInput(
 	input model.CreateStudentInput,
 ) map[string]string {
+	return validateStudentFields(
+		input.FirstName,
+		input.LastName,
+		input.Age,
+		input.NationalCode,
+		input.Email,
+		input.Phone,
+	)
+}
+
+// validateUpdateStudentInput validates student update fields.
+func validateUpdateStudentInput(
+	input model.UpdateStudentInput,
+) map[string]string {
+	return validateStudentFields(
+		input.FirstName,
+		input.LastName,
+		input.Age,
+		input.NationalCode,
+		input.Email,
+		input.Phone,
+	)
+}
+
+// validateStudentFields contains shared student validation rules.
+func validateStudentFields(
+	firstName string,
+	lastName string,
+	age int,
+	nationalCode string,
+	email string,
+	phone string,
+) map[string]string {
 	validationErrors := make(map[string]string)
 
-	if len(input.FirstName) < 2 {
+	if len(firstName) < 2 {
 		validationErrors["first_name"] =
 			"First name must contain at least 2 characters"
 	}
 
-	if len(input.LastName) < 2 {
+	if len(lastName) < 2 {
 		validationErrors["last_name"] =
 			"Last name must contain at least 2 characters"
 	}
 
-	if input.Age < 16 || input.Age > 100 {
+	if age < 16 || age > 100 {
 		validationErrors["age"] =
 			"Age must be between 16 and 100"
 	}
 
-	if !isExactlyDigits(input.NationalCode, 10) {
+	if !isExactlyDigits(nationalCode, 10) {
 		validationErrors["national_code"] =
 			"National code must contain exactly 10 digits"
 	}
 
-	if !isValidEmail(input.Email) {
+	if !isValidEmail(email) {
 		validationErrors["email"] =
 			"Email address is invalid"
 	}
 
-	if input.Phone != "" && !isExactlyDigits(input.Phone, 11) {
+	if phone != "" && !isExactlyDigits(phone, 11) {
 		validationErrors["phone"] =
 			"Phone number must contain exactly 11 digits"
 	}

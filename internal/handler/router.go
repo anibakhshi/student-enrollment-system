@@ -27,6 +27,16 @@ func NewRouter(studentHandler *StudentHandler) http.Handler {
 		studentHandler.Create,
 	)
 
+	mux.HandleFunc(
+		"PUT /api/v1/students/{id}",
+		studentHandler.Update,
+	)
+
+	mux.HandleFunc(
+		"DELETE /api/v1/students/{id}",
+		studentHandler.Delete,
+	)
+
 	handler := middleware.Logging(mux)
 	handler = middleware.RequestID(handler)
 

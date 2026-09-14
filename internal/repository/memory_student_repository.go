@@ -23,7 +23,7 @@ type MemoryStudentRepository struct {
 	nextID   int
 }
 
-// NewMemoryStudentRepository creates a repository with initial sample data.
+// NewMemoryStudentRepository creates a repository with sample data.
 func NewMemoryStudentRepository() *MemoryStudentRepository {
 	now := time.Now().UTC()
 
@@ -56,7 +56,7 @@ func NewMemoryStudentRepository() *MemoryStudentRepository {
 	}
 }
 
-// List returns a copy of all students.
+// List returns a safe copy of all students.
 func (r *MemoryStudentRepository) List(
 	ctx context.Context,
 ) ([]model.Student, error) {
@@ -73,7 +73,7 @@ func (r *MemoryStudentRepository) List(
 	return students, nil
 }
 
-// GetByID finds a student by ID.
+// GetByID returns a student by ID.
 func (r *MemoryStudentRepository) GetByID(
 	ctx context.Context,
 	id int,
@@ -106,14 +106,8 @@ func (r *MemoryStudentRepository) Create(
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	for _, existingStudent := range r.students {
-		if existingStudent.NationalCode == student.NationalCode {
-			return model.Student{}, ErrNationalCodeExists
-		}
-
-		if strings.EqualFold(existingStudent.Email, student.Email) {
-			return model.Student{}, ErrEmailExists
-		}
+	if err := r.checkUniqueFields(student, 0); err != nil {
+		return model.Student{}, err
 	}
 
 	now := time.Now().UTC()
@@ -126,4 +120,94 @@ func (r *MemoryStudentRepository) Create(
 	r.students = append(r.students, student)
 
 	return student, nil
+}
+
+// Update replaces an existing student's editable information.
+func (r *MemoryStudentRepository) Update(
+	ctx context.Context,
+	id int,
+	student model.Student,
+) (model.Student, error) {
+	if err := ctx.Err(); err != nil {
+		return model.Student{}, err
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	studentIndex := -1
+
+	for index, existingStudent := range r.students {
+		if existingStudent.ID == id {
+			studentIndex = index
+			break
+		}
+	}
+
+	if studentIndex == -1 {
+		return model.Student{}, ErrStudentNotFound
+	}
+
+	if err := r.checkUniqueFields(student, id); err != nil {
+		return model.Student{}, err
+	}
+
+	existingStudent := r.students[studentIndex]
+
+	student.ID = id
+	student.CreatedAt = existingStudent.CreatedAt
+	student.UpdatedAt = time.Now().UTC()
+
+	r.students[studentIndex] = student
+
+	return student, nil
+}
+
+// Delete removes a student from the memory repository.
+func (r *MemoryStudentRepository) Delete(
+	ctx context.Context,
+	id int,
+) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for index, student := range r.students {
+		if student.ID == id {
+			r.students = append(
+				r.students[:index],
+				r.students[index+1:]...,
+			)
+
+			return nil
+		}
+	}
+
+	return ErrStudentNotFound
+}
+
+// checkUniqueFields verifies national-code and email uniqueness.
+// The ignoredID is used when updating an existing student.
+func (r *MemoryStudentRepository) checkUniqueFields(
+	student model.Student,
+	ignoredID int,
+) error {
+	for _, existingStudent := range r.students {
+		if existingStudent.ID == ignoredID {
+			continue
+		}
+
+		if existingStudent.NationalCode == student.NationalCode {
+			return ErrNationalCodeExists
+		}
+
+		if strings.EqualFold(existingStudent.Email, student.Email) {
+			return ErrEmailExists
+		}
+	}
+
+	return nil
 }
