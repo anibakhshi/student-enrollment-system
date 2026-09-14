@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/anita-bakhshi/student-enrollment-system/internal/config"
+	"github.com/anita-bakhshi/student-enrollment-system/internal/database"
 	"github.com/anita-bakhshi/student-enrollment-system/internal/handler"
 	"github.com/anita-bakhshi/student-enrollment-system/internal/repository"
 	"github.com/anita-bakhshi/student-enrollment-system/internal/service"
@@ -23,7 +25,30 @@ func main() {
 		os.Exit(1)
 	}
 
-	studentRepository := repository.NewMemoryStudentRepository()
+	startupContext, cancelStartup := context.WithTimeout(
+		context.Background(),
+		10*time.Second,
+	)
+	defer cancelStartup()
+
+	databasePool, err := database.NewPostgresPool(
+		startupContext,
+		cfg.DatabaseURL,
+	)
+	if err != nil {
+		slog.Error(
+			"failed to connect to PostgreSQL",
+			"error", err,
+		)
+		os.Exit(1)
+	}
+	defer databasePool.Close()
+
+	slog.Info("connected to PostgreSQL")
+
+	studentRepository :=
+		repository.NewPostgresStudentRepository(databasePool)
+
 	studentService := service.NewStudentService(studentRepository)
 	studentHandler := handler.NewStudentHandler(studentService)
 
