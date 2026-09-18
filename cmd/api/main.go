@@ -13,6 +13,7 @@ import (
 	"github.com/anita-bakhshi/student-enrollment-system/internal/handler"
 	"github.com/anita-bakhshi/student-enrollment-system/internal/repository"
 	"github.com/anita-bakhshi/student-enrollment-system/internal/service"
+	"github.com/anita-bakhshi/student-enrollment-system/internal/storage"
 )
 
 func main() {
@@ -21,7 +22,10 @@ func main() {
 
 	cfg, err := config.Load()
 	if err != nil {
-		slog.Error("failed to load configuration", "error", err)
+		slog.Error(
+			"failed to load configuration",
+			"error", err,
+		)
 		os.Exit(1)
 	}
 
@@ -46,13 +50,42 @@ func main() {
 
 	slog.Info("connected to PostgreSQL")
 
+	imageStorage, err := storage.NewLocalImageStorage(
+		cfg.UploadDirectory,
+	)
+	if err != nil {
+		slog.Error(
+			"failed to initialize image storage",
+			"upload_directory", cfg.UploadDirectory,
+			"error", err,
+		)
+		os.Exit(1)
+	}
+
+	slog.Info(
+		"image storage initialized",
+		"upload_directory", cfg.UploadDirectory,
+	)
+
 	studentRepository :=
 		repository.NewPostgresStudentRepository(databasePool)
 
 	studentService := service.NewStudentService(studentRepository)
+
 	studentHandler := handler.NewStudentHandler(studentService)
 
-	router := handler.NewRouter(studentHandler)
+	studentPhotoHandler := handler.NewStudentPhotoHandler(
+		studentService,
+		imageStorage,
+	)
+
+	router := handler.NewRouter(
+		studentHandler,
+		handler.RouterOptions{
+			StudentPhotoHandler: studentPhotoHandler,
+			UploadDirectory:     cfg.UploadDirectory,
+		},
+	)
 
 	server := &http.Server{
 		Addr:              cfg.HTTPAddress,
@@ -71,7 +104,10 @@ func main() {
 
 	if err := server.ListenAndServe(); err != nil &&
 		!errors.Is(err, http.ErrServerClosed) {
-		slog.Error("server failed", "error", err)
+		slog.Error(
+			"server failed",
+			"error", err,
+		)
 		os.Exit(1)
 	}
 }

@@ -25,12 +25,34 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      uploads-init:
+        condition: service_completed_successfully
 
     ports:
       - "8081:8081"
 
+    volumes:
+      - student_uploads:/app/uploads
+
     networks:
       - student_network
+
+  uploads-init:
+    image: alpine:3.20
+    container_name: student_enrollment_uploads_init
+    restart: "no"
+    user: "0:0"
+
+    command:
+      - /bin/sh
+      - -c
+      - >
+        mkdir -p /app/uploads
+        && chown -R 65532:65532 /app/uploads
+        && chmod 0750 /app/uploads
+
+    volumes:
+      - student_uploads:/app/uploads
 
   migrate:
     image: postgres:16-alpine
@@ -107,6 +129,9 @@ services:
 volumes:
   student_postgres_data:
     name: student_enrollment_postgres_data
+
+  student_uploads:
+    name: student_enrollment_uploads
 
 networks:
   student_network:
