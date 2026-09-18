@@ -113,6 +113,20 @@ func main() {
 	courseHandler :=
 		handler.NewCourseHandler(courseService)
 
+	// Enrollment dependencies.
+	enrollmentRepository :=
+		repository.NewPostgresEnrollmentRepository(databasePool)
+
+	enrollmentService :=
+		service.NewEnrollmentService(
+			enrollmentRepository,
+			studentRepository,
+			courseRepository,
+		)
+
+	enrollmentHandler :=
+		handler.NewEnrollmentHandler(enrollmentService)
+
 	// Create the application router.
 	router := handler.NewRouter(
 		studentHandler,
@@ -120,6 +134,7 @@ func main() {
 			StudentPhotoHandler: studentPhotoHandler,
 			InstructorHandler:   instructorHandler,
 			CourseHandler:       courseHandler,
+			EnrollmentHandler:   enrollmentHandler,
 			UploadDirectory:     cfg.UploadDirectory,
 		},
 	)

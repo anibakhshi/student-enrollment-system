@@ -3,7 +3,6 @@ package model
 import "time"
 
 // Student represents a student in the enrollment system.
-// Student represents a student in the enrollment system.
 type Student struct {
 	ID               int       `json:"id"`
 	FirstName        string    `json:"first_name"`

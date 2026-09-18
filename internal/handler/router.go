@@ -12,6 +12,7 @@ type RouterOptions struct {
 	StudentPhotoHandler *StudentPhotoHandler
 	InstructorHandler   *InstructorHandler
 	CourseHandler       *CourseHandler
+	EnrollmentHandler   *EnrollmentHandler
 	UploadDirectory     string
 }
 
@@ -35,6 +36,11 @@ func NewRouter(
 		registerCourseRoutes(
 			mux,
 			options[0].CourseHandler,
+		)
+
+		registerEnrollmentRoutes(
+			mux,
+			options[0].EnrollmentHandler,
 		)
 
 		registerPhotoRoutes(mux, options[0])
@@ -144,6 +150,51 @@ func registerCourseRoutes(
 	mux.HandleFunc(
 		"DELETE /api/v1/courses/{id}",
 		courseHandler.Delete,
+	)
+}
+
+// registerEnrollmentRoutes registers enrollment routes.
+func registerEnrollmentRoutes(
+	mux *http.ServeMux,
+	enrollmentHandler *EnrollmentHandler,
+) {
+	if enrollmentHandler == nil {
+		return
+	}
+
+	mux.HandleFunc(
+		"GET /api/v1/enrollments",
+		enrollmentHandler.List,
+	)
+
+	mux.HandleFunc(
+		"GET /api/v1/enrollments/{id}",
+		enrollmentHandler.GetByID,
+	)
+
+	mux.HandleFunc(
+		"POST /api/v1/enrollments",
+		enrollmentHandler.Create,
+	)
+
+	mux.HandleFunc(
+		"PUT /api/v1/enrollments/{id}",
+		enrollmentHandler.Update,
+	)
+
+	mux.HandleFunc(
+		"DELETE /api/v1/enrollments/{id}",
+		enrollmentHandler.Delete,
+	)
+
+	mux.HandleFunc(
+		"GET /api/v1/students/{id}/enrollments",
+		enrollmentHandler.ListByStudentID,
+	)
+
+	mux.HandleFunc(
+		"GET /api/v1/courses/{id}/enrollments",
+		enrollmentHandler.ListByCourseID,
 	)
 }
 
