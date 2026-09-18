@@ -17,7 +17,9 @@ import (
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger := slog.New(
+		slog.NewJSONHandler(os.Stdout, nil),
+	)
 	slog.SetDefault(logger)
 
 	cfg, err := config.Load()
@@ -67,22 +69,38 @@ func main() {
 		"upload_directory", cfg.UploadDirectory,
 	)
 
+	// Student dependencies.
 	studentRepository :=
 		repository.NewPostgresStudentRepository(databasePool)
 
-	studentService := service.NewStudentService(studentRepository)
+	studentService :=
+		service.NewStudentService(studentRepository)
 
-	studentHandler := handler.NewStudentHandler(studentService)
+	studentHandler :=
+		handler.NewStudentHandler(studentService)
 
-	studentPhotoHandler := handler.NewStudentPhotoHandler(
-		studentService,
-		imageStorage,
-	)
+	studentPhotoHandler :=
+		handler.NewStudentPhotoHandler(
+			studentService,
+			imageStorage,
+		)
 
+	// Instructor dependencies.
+	instructorRepository :=
+		repository.NewPostgresInstructorRepository(databasePool)
+
+	instructorService :=
+		service.NewInstructorService(instructorRepository)
+
+	instructorHandler :=
+		handler.NewInstructorHandler(instructorService)
+
+	// Application router.
 	router := handler.NewRouter(
 		studentHandler,
 		handler.RouterOptions{
 			StudentPhotoHandler: studentPhotoHandler,
+			InstructorHandler:   instructorHandler,
 			UploadDirectory:     cfg.UploadDirectory,
 		},
 	)

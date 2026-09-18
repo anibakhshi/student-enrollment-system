@@ -126,9 +126,9 @@ INSERT INTO instructors (
 )
 VALUES
     (
-        'Vahid',
-        'Ghorbani',
-        'vahid.ghorbani@example.com',
+        'Parham',
+        'Darvishi',
+        'parham.darvishi@example.com',
         '09121112222',
         'Software and data science instructor',
         'Data Science and Software Engineering'
@@ -169,7 +169,7 @@ SELECT
 FROM (
     VALUES
         (
-            'vahid.ghorbani@example.com',
+            'parham.darvishi@example.com',
             'DS-101',
             'Data Science Fundamentals',
             'Introduction to practical data science concepts',
