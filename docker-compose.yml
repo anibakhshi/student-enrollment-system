@@ -23,8 +23,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+
       migrate:
         condition: service_completed_successfully
+
       uploads-init:
         condition: service_completed_successfully
 
@@ -42,6 +44,7 @@ services:
     container_name: student_enrollment_uploads_init
     restart: "no"
     user: "0:0"
+    network_mode: "none"
 
     command:
       - /bin/sh
@@ -71,14 +74,56 @@ services:
 
     command:
       - /bin/sh
-      - -c
-      - >
-        psql
-        --host=postgres
-        --username=${POSTGRES_USER}
-        --dbname=${POSTGRES_DB}
-        --set=ON_ERROR_STOP=1
-        --file=/migrations/000001_create_students.up.sql
+      - -ec
+      - |
+        for migration_file in /migrations/*.up.sql; do
+          migration_name="$$(basename "$$migration_file")"
+          migration_version="$${migration_name%%_*}"
+
+          migration_table_exists="$$(
+            psql \
+              --host=postgres \
+              --username=${POSTGRES_USER} \
+              --dbname=${POSTGRES_DB} \
+              --tuples-only \
+              --no-align \
+              --command="SELECT to_regclass('public.schema_migrations') IS NOT NULL;"
+          )"
+
+          if [ "$$migration_table_exists" = "t" ]; then
+            migration_applied="$$(
+              psql \
+                --host=postgres \
+                --username=${POSTGRES_USER} \
+                --dbname=${POSTGRES_DB} \
+                --tuples-only \
+                --no-align \
+                --command="SELECT EXISTS (
+                  SELECT 1
+                  FROM schema_migrations
+                  WHERE version = '$$migration_version'
+                );"
+            )"
+
+            if [ "$$migration_applied" = "t" ]; then
+              echo "Skipping $$migration_name (already applied)."
+              continue
+            fi
+          fi
+
+          echo "Applying $$migration_name..."
+
+          psql \
+            --host=postgres \
+            --username=${POSTGRES_USER} \
+            --dbname=${POSTGRES_DB} \
+            --set=ON_ERROR_STOP=1 \
+            --file="$$migration_file"
+
+          echo "Applied $$migration_name successfully."
+        done
+
+        echo "All database migrations are up to date."
 
     networks:
       - student_network
