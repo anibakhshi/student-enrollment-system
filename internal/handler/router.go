@@ -11,6 +11,7 @@ import (
 type RouterOptions struct {
 	StudentPhotoHandler *StudentPhotoHandler
 	InstructorHandler   *InstructorHandler
+	CourseHandler       *CourseHandler
 	UploadDirectory     string
 }
 
@@ -29,6 +30,11 @@ func NewRouter(
 		registerInstructorRoutes(
 			mux,
 			options[0].InstructorHandler,
+		)
+
+		registerCourseRoutes(
+			mux,
+			options[0].CourseHandler,
 		)
 
 		registerPhotoRoutes(mux, options[0])
@@ -103,6 +109,41 @@ func registerInstructorRoutes(
 	mux.HandleFunc(
 		"DELETE /api/v1/instructors/{id}",
 		instructorHandler.Delete,
+	)
+}
+
+// registerCourseRoutes registers course CRUD routes.
+func registerCourseRoutes(
+	mux *http.ServeMux,
+	courseHandler *CourseHandler,
+) {
+	if courseHandler == nil {
+		return
+	}
+
+	mux.HandleFunc(
+		"GET /api/v1/courses",
+		courseHandler.List,
+	)
+
+	mux.HandleFunc(
+		"GET /api/v1/courses/{id}",
+		courseHandler.GetByID,
+	)
+
+	mux.HandleFunc(
+		"POST /api/v1/courses",
+		courseHandler.Create,
+	)
+
+	mux.HandleFunc(
+		"PUT /api/v1/courses/{id}",
+		courseHandler.Update,
+	)
+
+	mux.HandleFunc(
+		"DELETE /api/v1/courses/{id}",
+		courseHandler.Delete,
 	)
 }
 

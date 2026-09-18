@@ -17,11 +17,13 @@ import (
 )
 
 func main() {
+	// Configure structured JSON logging.
 	logger := slog.New(
 		slog.NewJSONHandler(os.Stdout, nil),
 	)
 	slog.SetDefault(logger)
 
+	// Load application configuration.
 	cfg, err := config.Load()
 	if err != nil {
 		slog.Error(
@@ -31,12 +33,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Create a startup context for the database connection.
 	startupContext, cancelStartup := context.WithTimeout(
 		context.Background(),
 		10*time.Second,
 	)
 	defer cancelStartup()
 
+	// Connect to PostgreSQL.
 	databasePool, err := database.NewPostgresPool(
 		startupContext,
 		cfg.DatabaseURL,
@@ -52,6 +56,7 @@ func main() {
 
 	slog.Info("connected to PostgreSQL")
 
+	// Initialize local profile-image storage.
 	imageStorage, err := storage.NewLocalImageStorage(
 		cfg.UploadDirectory,
 	)
@@ -95,16 +100,31 @@ func main() {
 	instructorHandler :=
 		handler.NewInstructorHandler(instructorService)
 
-	// Application router.
+	// Course dependencies.
+	courseRepository :=
+		repository.NewPostgresCourseRepository(databasePool)
+
+	courseService :=
+		service.NewCourseService(
+			courseRepository,
+			instructorRepository,
+		)
+
+	courseHandler :=
+		handler.NewCourseHandler(courseService)
+
+	// Create the application router.
 	router := handler.NewRouter(
 		studentHandler,
 		handler.RouterOptions{
 			StudentPhotoHandler: studentPhotoHandler,
 			InstructorHandler:   instructorHandler,
+			CourseHandler:       courseHandler,
 			UploadDirectory:     cfg.UploadDirectory,
 		},
 	)
 
+	// Configure the HTTP server.
 	server := &http.Server{
 		Addr:              cfg.HTTPAddress,
 		Handler:           router,
@@ -120,6 +140,7 @@ func main() {
 		"address", cfg.HTTPAddress,
 	)
 
+	// Start the HTTP server.
 	if err := server.ListenAndServe(); err != nil &&
 		!errors.Is(err, http.ErrServerClosed) {
 		slog.Error(
