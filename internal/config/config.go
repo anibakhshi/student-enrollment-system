@@ -8,12 +8,13 @@ import (
 
 // Config contains application configuration.
 type Config struct {
-	AppEnvironment string
-	HTTPAddress    string
-	ReadTimeout    time.Duration
-	WriteTimeout   time.Duration
-	IdleTimeout    time.Duration
-	DatabaseURL    string
+	AppEnvironment  string
+	HTTPAddress     string
+	ReadTimeout     time.Duration
+	WriteTimeout    time.Duration
+	IdleTimeout     time.Duration
+	DatabaseURL     string
+	UploadDirectory string
 }
 
 // Load reads application configuration from environment variables.
@@ -36,20 +37,30 @@ func Load() (Config, error) {
 	port := getEnvironmentVariable("APP_PORT", "8081")
 
 	return Config{
-		AppEnvironment: getEnvironmentVariable("APP_ENV", "development"),
-		HTTPAddress:    ":" + port,
-		ReadTimeout:    readTimeout,
-		WriteTimeout:   writeTimeout,
-		IdleTimeout:    idleTimeout,
+		AppEnvironment: getEnvironmentVariable(
+			"APP_ENV",
+			"development",
+		),
+		HTTPAddress:  ":" + port,
+		ReadTimeout:  readTimeout,
+		WriteTimeout: writeTimeout,
+		IdleTimeout:  idleTimeout,
 		DatabaseURL: getEnvironmentVariable(
 			"DATABASE_URL",
 			"postgres://student_app:student_secret@localhost:5432/student_enrollment?sslmode=disable",
+		),
+		UploadDirectory: getEnvironmentVariable(
+			"UPLOAD_DIR",
+			"./uploads",
 		),
 	}, nil
 }
 
 // getEnvironmentVariable returns an environment variable or its default value.
-func getEnvironmentVariable(key string, defaultValue string) string {
+func getEnvironmentVariable(
+	key string,
+	defaultValue string,
+) string {
 	value := os.Getenv(key)
 	if value == "" {
 		return defaultValue
@@ -59,7 +70,10 @@ func getEnvironmentVariable(key string, defaultValue string) string {
 }
 
 // getDuration reads and parses a duration environment variable.
-func getDuration(key string, defaultValue string) (time.Duration, error) {
+func getDuration(
+	key string,
+	defaultValue string,
+) (time.Duration, error) {
 	value := getEnvironmentVariable(key, defaultValue)
 
 	duration, err := time.ParseDuration(value)

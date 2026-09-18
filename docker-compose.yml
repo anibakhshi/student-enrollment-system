@@ -18,6 +18,7 @@ services:
       HTTP_WRITE_TIMEOUT: 10s
       HTTP_IDLE_TIMEOUT: 60s
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+      UPLOAD_DIR: /app/uploads
 
     depends_on:
       postgres:
