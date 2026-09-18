@@ -101,6 +101,29 @@ func (s *StudentService) Update(
 	return s.repository.Update(ctx, id, student)
 }
 
+// UpdateProfileImage updates a student's profile image path.
+func (s *StudentService) UpdateProfileImage(
+	ctx context.Context,
+	id int,
+	profileImagePath string,
+) (model.Student, error) {
+	profileImagePath = strings.TrimSpace(profileImagePath)
+
+	if profileImagePath == "" {
+		return model.Student{}, &ValidationError{
+			Fields: map[string]string{
+				"photo": "Profile image path is required",
+			},
+		}
+	}
+
+	return s.repository.UpdateProfileImage(
+		ctx,
+		id,
+		profileImagePath,
+	)
+}
+
 // Delete removes or soft-deletes an existing student.
 func (s *StudentService) Delete(
 	ctx context.Context,

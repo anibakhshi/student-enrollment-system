@@ -38,6 +38,7 @@ func (r *PostgresStudentRepository) List(
 			national_code,
 			email,
 			COALESCE(phone, ''),
+			COALESCE(profile_image_path, ''),
 			created_at,
 			updated_at
 		FROM students
@@ -64,6 +65,7 @@ func (r *PostgresStudentRepository) List(
 			&student.NationalCode,
 			&student.Email,
 			&student.Phone,
+			&student.ProfileImagePath,
 			&student.CreatedAt,
 			&student.UpdatedAt,
 		)
@@ -95,6 +97,7 @@ func (r *PostgresStudentRepository) GetByID(
 			national_code,
 			email,
 			COALESCE(phone, ''),
+			COALESCE(profile_image_path, ''),
 			created_at,
 			updated_at
 		FROM students
@@ -112,6 +115,7 @@ func (r *PostgresStudentRepository) GetByID(
 		&student.NationalCode,
 		&student.Email,
 		&student.Phone,
+		&student.ProfileImagePath,
 		&student.CreatedAt,
 		&student.UpdatedAt,
 	)
@@ -159,6 +163,7 @@ func (r *PostgresStudentRepository) Create(
 			national_code,
 			email,
 			COALESCE(phone, ''),
+			COALESCE(profile_image_path, ''),
 			created_at,
 			updated_at;
 	`
@@ -180,6 +185,7 @@ func (r *PostgresStudentRepository) Create(
 		&student.NationalCode,
 		&student.Email,
 		&student.Phone,
+		&student.ProfileImagePath,
 		&student.CreatedAt,
 		&student.UpdatedAt,
 	)
@@ -216,6 +222,7 @@ func (r *PostgresStudentRepository) Update(
 			national_code,
 			email,
 			COALESCE(phone, ''),
+			COALESCE(profile_image_path, ''),
 			created_at,
 			updated_at;
 	`
@@ -238,6 +245,7 @@ func (r *PostgresStudentRepository) Update(
 		&student.NationalCode,
 		&student.Email,
 		&student.Phone,
+		&student.ProfileImagePath,
 		&student.CreatedAt,
 		&student.UpdatedAt,
 	)
@@ -248,6 +256,63 @@ func (r *PostgresStudentRepository) Update(
 		}
 
 		return model.Student{}, mapPostgresStudentError(err)
+	}
+
+	return student, nil
+}
+
+// UpdateProfileImage updates a student's profile image path.
+func (r *PostgresStudentRepository) UpdateProfileImage(
+	ctx context.Context,
+	id int,
+	profileImagePath string,
+) (model.Student, error) {
+	const query = `
+		UPDATE students
+		SET profile_image_path = NULLIF($2, '')
+		WHERE id = $1
+		  AND deleted_at IS NULL
+		RETURNING
+			id,
+			first_name,
+			last_name,
+			age,
+			national_code,
+			email,
+			COALESCE(phone, ''),
+			COALESCE(profile_image_path, ''),
+			created_at,
+			updated_at;
+	`
+
+	var student model.Student
+
+	err := r.pool.QueryRow(
+		ctx,
+		query,
+		id,
+		profileImagePath,
+	).Scan(
+		&student.ID,
+		&student.FirstName,
+		&student.LastName,
+		&student.Age,
+		&student.NationalCode,
+		&student.Email,
+		&student.Phone,
+		&student.ProfileImagePath,
+		&student.CreatedAt,
+		&student.UpdatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.Student{}, ErrStudentNotFound
+		}
+
+		return model.Student{}, fmt.Errorf(
+			"update student profile image: %w",
+			err,
+		)
 	}
 
 	return student, nil

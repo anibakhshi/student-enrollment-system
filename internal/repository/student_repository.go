@@ -26,6 +26,12 @@ type StudentRepository interface {
 		student model.Student,
 	) (model.Student, error)
 
+	UpdateProfileImage(
+		ctx context.Context,
+		id int,
+		profileImagePath string,
+	) (model.Student, error)
+
 	Delete(
 		ctx context.Context,
 		id int,

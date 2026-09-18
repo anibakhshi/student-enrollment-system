@@ -155,12 +155,42 @@ func (r *MemoryStudentRepository) Update(
 	existingStudent := r.students[studentIndex]
 
 	student.ID = id
+	student.ProfileImagePath = existingStudent.ProfileImagePath
 	student.CreatedAt = existingStudent.CreatedAt
 	student.UpdatedAt = time.Now().UTC()
 
 	r.students[studentIndex] = student
 
 	return student, nil
+}
+
+// UpdateProfileImage updates a student's profile image path.
+func (r *MemoryStudentRepository) UpdateProfileImage(
+	ctx context.Context,
+	id int,
+	profileImagePath string,
+) (model.Student, error) {
+	if err := ctx.Err(); err != nil {
+		return model.Student{}, err
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for index, student := range r.students {
+		if student.ID != id {
+			continue
+		}
+
+		student.ProfileImagePath = profileImagePath
+		student.UpdatedAt = time.Now().UTC()
+
+		r.students[index] = student
+
+		return student, nil
+	}
+
+	return model.Student{}, ErrStudentNotFound
 }
 
 // Delete removes a student from the memory repository.
