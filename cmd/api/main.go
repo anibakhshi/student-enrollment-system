@@ -127,6 +127,21 @@ func main() {
 	enrollmentHandler :=
 		handler.NewEnrollmentHandler(enrollmentService)
 
+	// Payment dependencies.
+	paymentRepository :=
+		repository.NewPostgresPaymentRepository(databasePool)
+
+	paymentService :=
+		service.NewPaymentService(
+			paymentRepository,
+			enrollmentRepository,
+			studentRepository,
+			courseRepository,
+		)
+
+	paymentHandler :=
+		handler.NewPaymentHandler(paymentService)
+
 	// Create the application router.
 	router := handler.NewRouter(
 		studentHandler,
@@ -135,6 +150,7 @@ func main() {
 			InstructorHandler:   instructorHandler,
 			CourseHandler:       courseHandler,
 			EnrollmentHandler:   enrollmentHandler,
+			PaymentHandler:      paymentHandler,
 			UploadDirectory:     cfg.UploadDirectory,
 		},
 	)

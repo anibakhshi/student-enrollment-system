@@ -13,6 +13,7 @@ type RouterOptions struct {
 	InstructorHandler   *InstructorHandler
 	CourseHandler       *CourseHandler
 	EnrollmentHandler   *EnrollmentHandler
+	PaymentHandler      *PaymentHandler
 	UploadDirectory     string
 }
 
@@ -41,6 +42,11 @@ func NewRouter(
 		registerEnrollmentRoutes(
 			mux,
 			options[0].EnrollmentHandler,
+		)
+
+		registerPaymentRoutes(
+			mux,
+			options[0].PaymentHandler,
 		)
 
 		registerPhotoRoutes(mux, options[0])
@@ -195,6 +201,46 @@ func registerEnrollmentRoutes(
 	mux.HandleFunc(
 		"GET /api/v1/courses/{id}/enrollments",
 		enrollmentHandler.ListByCourseID,
+	)
+}
+
+// registerPaymentRoutes registers payment routes.
+func registerPaymentRoutes(
+	mux *http.ServeMux,
+	paymentHandler *PaymentHandler,
+) {
+	if paymentHandler == nil {
+		return
+	}
+
+	mux.HandleFunc(
+		"GET /api/v1/payments",
+		paymentHandler.List,
+	)
+
+	mux.HandleFunc(
+		"GET /api/v1/payments/{id}",
+		paymentHandler.GetByID,
+	)
+
+	mux.HandleFunc(
+		"POST /api/v1/payments",
+		paymentHandler.Create,
+	)
+
+	mux.HandleFunc(
+		"PUT /api/v1/payments/{id}",
+		paymentHandler.Update,
+	)
+
+	mux.HandleFunc(
+		"DELETE /api/v1/payments/{id}",
+		paymentHandler.Delete,
+	)
+
+	mux.HandleFunc(
+		"GET /api/v1/enrollments/{id}/payments",
+		paymentHandler.ListByEnrollmentID,
 	)
 }
 
