@@ -1,15 +1,220 @@
 {% extends "base.html" %}
+{% load static humanize %}
 
 {% block title %}{{ instructor.full_name }}{% endblock %}
 
-{% block content %}
-<section class="page-shell">
-    <a href="{% url 'catalog:instructor_list' %}">
-        بازگشت به استادان
-    </a>
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/catalog.css' %}"
+    >
+{% endblock %}
 
-    <h1>{{ instructor.full_name }}</h1>
-    <p>{{ instructor.expertise }}</p>
-    <p>{{ instructor.bio }}</p>
+{% block content %}
+<nav class="catalog-breadcrumb" aria-label="مسیر صفحه">
+    <a href="{% url 'dashboard:index' %}">داشبورد</a>
+    <span>←</span>
+    <a href="{% url 'catalog:instructor_list' %}">استادان</a>
+    <span>←</span>
+    <strong>{{ instructor.full_name }}</strong>
+</nav>
+
+<section class="instructor-profile-hero">
+    <div class="instructor-profile-hero__visual">
+        {% if instructor.image_url %}
+            <img
+                src="{{ instructor.image_url }}"
+                alt="{{ instructor.full_name }}"
+            >
+        {% else %}
+            <div class="instructor-profile-hero__initials">
+                {{ instructor.first_name|slice:":1" }}{{ instructor.last_name|slice:":1" }}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="instructor-profile-hero__content">
+        <span class="catalog-eyebrow">INSTRUCTOR PROFILE</span>
+
+        <h1>{{ instructor.full_name }}</h1>
+        <strong>{{ instructor.expertise }}</strong>
+
+        <p>
+            {% if instructor.bio %}
+                {{ instructor.bio }}
+            {% else %}
+                اطلاعات تکمیلی رزومه و سوابق آموزشی استاد
+                به‌زودی اضافه خواهد شد.
+            {% endif %}
+        </p>
+
+        <div class="instructor-profile-hero__stats">
+            <div>
+                <strong>{{ active_course_count }}</strong>
+                <span>دوره فعال</span>
+            </div>
+
+            <div>
+                <strong>IT</strong>
+                <span>حوزه تخصصی</span>
+            </div>
+
+            <div>
+                <strong>
+                    {% if instructor.is_featured %}
+                        منتخب
+                    {% else %}
+                        فعال
+                    {% endif %}
+                </strong>
+                <span>وضعیت مدرس</span>
+            </div>
+        </div>
+    </div>
 </section>
+
+<div class="instructor-detail-layout">
+    <section class="detail-panel">
+        <div class="detail-panel__heading">
+            <span>ABOUT INSTRUCTOR</span>
+            <h2>درباره استاد</h2>
+        </div>
+
+        <div class="detail-rich-text">
+            {% if instructor.bio %}
+                {{ instructor.bio|linebreaks }}
+            {% else %}
+                <p>
+                    رزومه، سوابق کاری و اطلاعات تکمیلی این استاد
+                    پس از بررسی منابع رسمی در این قسمت قرار می‌گیرد.
+                </p>
+            {% endif %}
+        </div>
+
+        {% if instructor.email or instructor.phone %}
+            <div class="instructor-contact-grid">
+                {% if instructor.email %}
+                    <div>
+                        <small>ایمیل</small>
+                        <a href="mailto:{{ instructor.email }}">
+                            {{ instructor.email }}
+                        </a>
+                    </div>
+                {% endif %}
+
+                {% if instructor.phone %}
+                    <div>
+                        <small>شماره تماس</small>
+                        <a href="tel:{{ instructor.phone }}">
+                            {{ instructor.phone }}
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if instructor.source_url %}
+            <a
+                class="course-source-link"
+                href="{{ instructor.source_url }}"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                مشاهده منبع رسمی اطلاعات
+                <span>↗</span>
+            </a>
+        {% endif %}
+    </section>
+
+    <section class="detail-panel">
+        <div class="detail-panel__heading">
+            <span>ACTIVE COURSES</span>
+            <h2>دوره‌های این استاد</h2>
+        </div>
+
+        <div class="instructor-course-list">
+            {% for offering in active_offerings %}
+                <article class="instructor-course-item">
+                    <div
+                        class="instructor-course-item__icon"
+                        style="--course-color: {{ offering.course.category.accent_color }};"
+                    >
+                        &lt;/&gt;
+                    </div>
+
+                    <div class="instructor-course-item__content">
+                        <div>
+                            <span>{{ offering.course.category.name }}</span>
+
+                            <span
+                                class="offering-status offering-status--{{ offering.status }}"
+                            >
+                                {{ offering.get_status_display }}
+                            </span>
+                        </div>
+
+                        <h3>
+                            <a
+                                href="{% url 'catalog:course_detail' offering.course.slug %}"
+                            >
+                                {{ offering.course.title }}
+                            </a>
+                        </h3>
+
+                        <p>
+                            {{ offering.course.short_description|truncatechars:130 }}
+                        </p>
+
+                        <dl>
+                            <div>
+                                <dt>شروع کلاس</dt>
+                                <dd>
+                                    {{ offering.start_date_text|default:"اعلام خواهد شد" }}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt>برنامه</dt>
+                                <dd>
+                                    {{ offering.schedule_text|default:"اعلام خواهد شد" }}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt>مدت دوره</dt>
+                                <dd>
+                                    {{ offering.course.duration_hours }}
+                                    ساعت
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <div class="instructor-course-item__action">
+                        <strong>
+                            {{ offering.effective_price_toman|intcomma }}
+                            <small>تومان</small>
+                        </strong>
+
+                        <a
+                            href="{% url 'catalog:course_detail' offering.course.slug %}"
+                        >
+                            مشاهده دوره
+                            <span>←</span>
+                        </a>
+                    </div>
+                </article>
+            {% empty %}
+                <div class="detail-empty-state">
+                    <span>▱</span>
+                    <h3>دوره فعالی ثبت نشده است</h3>
+                    <p>
+                        دوره‌های این استاد پس از بررسی برنامه
+                        آموزشی رسمی اضافه می‌شوند.
+                    </p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
 {% endblock %}

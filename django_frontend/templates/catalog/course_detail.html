@@ -1,14 +1,341 @@
 {% extends "base.html" %}
+{% load static humanize %}
 
 {% block title %}{{ course.title }}{% endblock %}
 
-{% block content %}
-<section class="page-shell">
-    <a href="{% url 'catalog:course_list' %}">
-        بازگشت به دوره‌ها
-    </a>
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/catalog.css' %}"
+    >
+{% endblock %}
 
-    <h1>{{ course.title }}</h1>
-    <p>{{ course.description }}</p>
+{% block content %}
+<nav class="catalog-breadcrumb" aria-label="مسیر صفحه">
+    <a href="{% url 'dashboard:index' %}">داشبورد</a>
+    <span>←</span>
+    <a href="{% url 'catalog:course_list' %}">دوره‌ها</a>
+    <span>←</span>
+    <strong>{{ course.title }}</strong>
+</nav>
+
+<section
+    class="course-detail-hero"
+    style="--detail-accent: {{ course.category.accent_color }};"
+>
+    <div class="course-detail-hero__content">
+        <div class="course-detail-hero__badges">
+            <span>{{ course.category.name }}</span>
+
+            {% if course.is_featured %}
+                <span>دوره منتخب</span>
+            {% endif %}
+        </div>
+
+        <h1>{{ course.title }}</h1>
+
+        <p>
+            {{ course.short_description|default:course.description }}
+        </p>
+
+        <div class="course-detail-hero__facts">
+            <div>
+                <small>مدت آموزش</small>
+                <strong>{{ course.duration_hours }} ساعت</strong>
+            </div>
+
+            <div>
+                <small>سطح دوره</small>
+                <strong>{{ course.get_level_display }}</strong>
+            </div>
+
+            <div>
+                <small>شیوه آموزش</small>
+                <strong>
+                    {% with offering=course.offerings.all|first %}
+                        {% if offering %}
+                            {{ offering.get_delivery_mode_display }}
+                        {% else %}
+                            اعلام خواهد شد
+                        {% endif %}
+                    {% endwith %}
+                </strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="course-detail-hero__cover">
+        {% if course.cover_image_url %}
+            <img
+                src="{{ course.cover_image_url }}"
+                alt="{{ course.title }}"
+            >
+        {% else %}
+            <div class="course-detail-hero__placeholder">
+                <span>&lt;/&gt;</span>
+                <small>{{ course.category.name }}</small>
+            </div>
+        {% endif %}
+    </div>
 </section>
+
+<div class="course-detail-layout">
+    <div class="course-detail-main">
+        <section class="detail-panel">
+            <div class="detail-panel__heading">
+                <span>ABOUT COURSE</span>
+                <h2>درباره این دوره</h2>
+            </div>
+
+            <div class="detail-rich-text">
+                {% if course.description %}
+                    {{ course.description|linebreaks }}
+                {% else %}
+                    <p>
+                        توضیحات کامل این دوره به‌زودی اضافه خواهد شد.
+                    </p>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="detail-panel">
+            <div class="detail-panel__heading">
+                <span>PREREQUISITES</span>
+                <h2>پیش‌نیازهای دوره</h2>
+            </div>
+
+            <div class="prerequisite-box">
+                <span>✓</span>
+
+                <p>
+                    {% if course.prerequisites %}
+                        {{ course.prerequisites|linebreaksbr }}
+                    {% else %}
+                        این دوره پیش‌نیاز مشخصی ندارد.
+                    {% endif %}
+                </p>
+            </div>
+        </section>
+
+        <section class="detail-panel">
+            <div class="detail-panel__heading">
+                <span>UPCOMING CLASSES</span>
+                <h2>کلاس‌ها و زمان‌بندی‌ها</h2>
+            </div>
+
+            <div class="offering-list">
+                {% for offering in course.offerings.all %}
+                    <article class="offering-card">
+                        <div class="offering-card__top">
+                            <span
+                                class="offering-status offering-status--{{ offering.status }}"
+                            >
+                                {{ offering.get_status_display }}
+                            </span>
+
+                            <span>
+                                {{ offering.get_delivery_mode_display }}
+                            </span>
+                        </div>
+
+                        <a
+                            class="offering-instructor"
+                            href="{% url 'catalog:instructor_detail' offering.instructor.slug %}"
+                        >
+                            {% if offering.instructor.image_url %}
+                                <img
+                                    src="{{ offering.instructor.image_url }}"
+                                    alt="{{ offering.instructor.full_name }}"
+                                >
+                            {% else %}
+                                <span>
+                                    {{ offering.instructor.first_name|slice:":1" }}{{ offering.instructor.last_name|slice:":1" }}
+                                </span>
+                            {% endif %}
+
+                            <div>
+                                <small>مدرس دوره</small>
+                                <strong>
+                                    {{ offering.instructor.full_name }}
+                                </strong>
+                                <p>{{ offering.instructor.expertise }}</p>
+                            </div>
+                        </a>
+
+                        <dl class="offering-details">
+                            <div>
+                                <dt>تاریخ شروع</dt>
+                                <dd>
+                                    {{ offering.start_date_text|default:"اعلام خواهد شد" }}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt>زمان برگزاری</dt>
+                                <dd>
+                                    {{ offering.schedule_text|default:"اعلام خواهد شد" }}
+                                </dd>
+                            </div>
+
+                            <div>
+                                <dt>ظرفیت</dt>
+                                <dd>
+                                    {% if offering.capacity %}
+                                        {{ offering.capacity }} نفر
+                                    {% else %}
+                                        اعلام نشده
+                                    {% endif %}
+                                </dd>
+                            </div>
+                        </dl>
+
+                        {% if offering.registration_url %}
+                            <a
+                                class="catalog-button catalog-button--primary"
+                                href="{{ offering.registration_url }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                مشاهده صفحه ثبت‌نام
+                            </a>
+                        {% endif %}
+                    </article>
+                {% empty %}
+                    <div class="detail-empty-state">
+                        <span>◷</span>
+                        <h3>زمان‌بندی جدید هنوز اعلام نشده است</h3>
+                        <p>
+                            اطلاعات کلاس‌های آینده پس از انتشار
+                            برنامه رسمی در این بخش قرار می‌گیرد.
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <aside class="course-detail-sidebar">
+        <section class="enrollment-summary">
+            <span class="enrollment-summary__label">
+                شهریه دوره
+            </span>
+
+            <div class="enrollment-summary__price">
+                {% if course.price_toman %}
+                    <strong>{{ course.price_toman|intcomma }}</strong>
+                    <span>تومان</span>
+                {% else %}
+                    <strong>تماس بگیرید</strong>
+                {% endif %}
+            </div>
+
+            <div class="enrollment-summary__items">
+                <div>
+                    <span>◷</span>
+                    <p>
+                        <small>مدت دوره</small>
+                        <strong>
+                            {{ course.duration_hours }} ساعت
+                        </strong>
+                    </p>
+                </div>
+
+                <div>
+                    <span>◈</span>
+                    <p>
+                        <small>سطح آموزشی</small>
+                        <strong>{{ course.get_level_display }}</strong>
+                    </p>
+                </div>
+
+                <div>
+                    <span>▱</span>
+                    <p>
+                        <small>دسته‌بندی</small>
+                        <strong>{{ course.category.name }}</strong>
+                    </p>
+                </div>
+            </div>
+
+            {% with offering=course.offerings.all|first %}
+                {% if offering and offering.registration_url %}
+                    <a
+                        class="catalog-button catalog-button--primary enrollment-summary__button"
+                        href="{{ offering.registration_url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        ثبت‌نام در دوره
+                    </a>
+                {% else %}
+                    <a
+                        class="catalog-button catalog-button--primary enrollment-summary__button"
+                        href="{% url 'catalog:course_list' %}"
+                    >
+                        مشاهده سایر دوره‌ها
+                    </a>
+                {% endif %}
+            {% endwith %}
+
+            {% if course.source_url %}
+                <a
+                    class="course-source-link"
+                    href="{{ course.source_url }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    مشاهده منبع رسمی دوره
+                    <span>↗</span>
+                </a>
+            {% endif %}
+        </section>
+    </aside>
+</div>
+
+{% if related_courses %}
+    <section class="related-section">
+        <div class="catalog-section-heading">
+            <div>
+                <span>SIMILAR COURSES</span>
+                <h2>دوره‌های مرتبط</h2>
+            </div>
+
+            <a href="{% url 'catalog:course_list' %}">
+                مشاهده همه دوره‌ها
+            </a>
+        </div>
+
+        <div class="related-course-grid">
+            {% for related_course in related_courses %}
+                <article class="related-course-card">
+                    <span
+                        class="related-course-card__accent"
+                        style="background: {{ related_course.category.accent_color }};"
+                    ></span>
+
+                    <small>{{ related_course.category.name }}</small>
+                    <h3>{{ related_course.title }}</h3>
+
+                    <p>
+                        {{ related_course.short_description|truncatechars:100 }}
+                    </p>
+
+                    <div>
+                        <strong>
+                            {{ related_course.price_toman|intcomma }}
+                            تومان
+                        </strong>
+
+                        <a
+                            href="{% url 'catalog:course_detail' related_course.slug %}"
+                        >
+                            مشاهده
+                            <span>←</span>
+                        </a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
 {% endblock %}
