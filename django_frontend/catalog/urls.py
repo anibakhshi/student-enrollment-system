@@ -18,7 +18,7 @@ urlpatterns = [
         name="course_list",
     ),
     path(
-        "courses/<slug:slug>/",
+        "courses/<str:slug>/",
         CourseDetailView.as_view(),
         name="course_detail",
     ),
@@ -28,7 +28,7 @@ urlpatterns = [
         name="instructor_list",
     ),
     path(
-        "instructors/<slug:slug>/",
+        "instructors/<str:slug>/",
         InstructorDetailView.as_view(),
         name="instructor_detail",
     ),
