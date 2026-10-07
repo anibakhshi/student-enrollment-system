@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero-panel">
+    <div>
+        <span class="eyebrow">Student Enrollment System</span>
+
+        <h1>مدیریت هوشمند آموزش، ساده و یکپارچه</h1>
+
+        <p>
+            وضعیت دانشجویان، دوره‌ها، ثبت‌نام‌ها و پرداخت‌ها
+            را از طریق REST API توسعه‌داده‌شده با Go مدیریت کنید.
+        </p>
+
+        <div class="hero-actions">
+            <span
+                class="api-badge {% if api_available %}success{% else %}danger{% endif %}"
+            >
+                {% if api_available %}
+                    ● ارتباط با سرویس برقرار است
+                {% else %}
+                    ● سرویس در دسترس نیست
+                {% endif %}
+            </span>
+
+            {% if api_health.version %}
+                <span class="version-badge">
+                    API v{{ api_health.version }}
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="hero-visual">
+        <div class="orbit orbit--one"></div>
+        <div class="orbit orbit--two"></div>
+        <div class="hero-code">&lt;/Go&gt;</div>
+    </div>
+</section>
+
+<section class="stats-grid">
+    <article class="stat-card stat-card--cyan">
+        <div class="stat-icon">01</div>
+        <div>
+            <span>دانشجویان</span>
+            <strong>{{ stats.students }}</strong>
+            <small>دانشجوی ثبت‌شده</small>
+        </div>
+    </article>
+
+    <article class="stat-card stat-card--violet">
+        <div class="stat-icon">02</div>
+        <div>
+            <span>استادان</span>
+            <strong>{{ stats.instructors }}</strong>
+            <small>استاد فعال در سامانه</small>
+        </div>
+    </article>
+
+    <article class="stat-card stat-card--amber">
+        <div class="stat-icon">03</div>
+        <div>
+            <span>دوره‌ها</span>
+            <strong>{{ stats.courses }}</strong>
+            <small>دوره آموزشی</small>
+        </div>
+    </article>
+
+    <article class="stat-card stat-card--green">
+        <div class="stat-icon">04</div>
+        <div>
+            <span>ثبت‌نام‌ها</span>
+            <strong>{{ stats.enrollments }}</strong>
+            <small>ثبت‌نام انجام‌شده</small>
+        </div>
+    </article>
+</section>
+
+<section class="dashboard-grid">
+    <article class="panel enrollment-chart">
+        <div class="panel-heading">
+            <div>
+                <span class="panel-kicker">نمای کلی</span>
+                <h2>وضعیت ثبت‌نام‌ها</h2>
+            </div>
+
+            <span class="panel-total">
+                مجموع {{ stats.enrollments }}
+            </span>
+        </div>
+
+        <div class="bar-chart">
+            {% for item in chart_items %}
+                <div class="bar-row">
+                    <div class="bar-meta">
+                        <span>{{ item.label }}</span>
+                        <strong>{{ item.count }}</strong>
+                    </div>
+
+                    <div class="bar-track">
+                        <div
+                            class="bar-fill bar-fill--{{ item.class }}"
+                            style="width: {{ item.percentage }}%"
+                        ></div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </article>
+
+    <article class="panel payment-summary">
+        <div class="panel-heading">
+            <div>
+                <span class="panel-kicker">امور مالی</span>
+                <h2>خلاصه پرداخت‌ها</h2>
+            </div>
+        </div>
+
+        <div class="revenue-card">
+            <span>مجموع پرداخت‌های موفق</span>
+
+            <strong>
+                {{ stats.total_revenue }}
+                <small>ریال</small>
+            </strong>
+        </div>
+
+        <div class="mini-stats">
+            <div>
+                <span>کل تراکنش‌ها</span>
+                <strong>{{ stats.payments }}</strong>
+            </div>
+
+            <div>
+                <span>پرداخت موفق</span>
+                <strong>{{ stats.successful_payments }}</strong>
+            </div>
+        </div>
+    </article>
+</section>
+
+<section class="tables-grid">
+    <article class="panel">
+        <div class="panel-heading">
+            <div>
+                <span class="panel-kicker">فعالیت‌های اخیر</span>
+                <h2>آخرین ثبت‌نام‌ها</h2>
+            </div>
+
+            <button class="text-button" type="button">
+                مشاهده همه
+            </button>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>دانشجو</th>
+                        <th>دوره</th>
+                        <th>وضعیت</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for enrollment in recent_enrollments %}
+                        <tr>
+                            <td>
+                                <div class="person-cell">
+                                    <span class="person-avatar">
+                                        {{ enrollment.student_name|slice:":1" }}
+                                    </span>
+
+                                    <strong>
+                                        {{ enrollment.student_name }}
+                                    </strong>
+                                </div>
+                            </td>
+
+                            <td>{{ enrollment.course_title }}</td>
+
+                            <td>
+                                <span
+                                    class="status-badge status-badge--{{ enrollment.status_class }}"
+                                >
+                                    {{ enrollment.status_label }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" class="empty-state">
+                                هنوز ثبت‌نامی وجود ندارد.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+
+    <article class="panel">
+        <div class="panel-heading">
+            <div>
+                <span class="panel-kicker">تراکنش‌ها</span>
+                <h2>پرداخت‌های اخیر</h2>
+            </div>
+
+            <button class="text-button" type="button">
+                مشاهده همه
+            </button>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>دانشجو</th>
+                        <th>مبلغ</th>
+                        <th>وضعیت</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for payment in recent_payments %}
+                        <tr>
+                            <td>
+                                <div class="person-cell">
+                                    <span class="person-avatar payment">
+                                        {{ payment.student_name|slice:":1" }}
+                                    </span>
+
+                                    <strong>
+                                        {{ payment.student_name }}
+                                    </strong>
+                                </div>
+                            </td>
+
+                            <td>
+                                <strong class="amount">
+                                    {{ payment.amount_display }}
+                                </strong>
+                                <small>ریال</small>
+                            </td>
+
+                            <td>
+                                <span
+                                    class="status-badge status-badge--{{ payment.status_class }}"
+                                >
+                                    {{ payment.status_label }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" class="empty-state">
+                                هنوز پرداختی وجود ندارد.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
+{% endblock %}

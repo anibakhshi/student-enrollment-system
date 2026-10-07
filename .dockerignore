@@ -16,3 +16,18 @@ coverage.html
 *.out
 
 README.md
+
+# Release artifacts
+bin
+dist
+
+# Django development files
+django_frontend/.venv
+django_frontend/db.sqlite3
+django_frontend/staticfiles
+django_frontend/**/__pycache__
+django_frontend/**/*.pyc
+
+# Git and editor files
+.git
+.vscode
