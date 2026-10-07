@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}دوره‌های آموزشی{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/catalog.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+<section class="catalog-hero">
+    <div class="catalog-hero__content">
+        <span class="catalog-eyebrow">مسیر یادگیری حرفه‌ای</span>
+
+        <h1>دوره‌ای متناسب با آینده شغلی خود پیدا کنید</h1>
+
+        <p>
+            مجموعه‌ای از دوره‌های تخصصی برنامه‌نویسی، داده،
+            زیرساخت، DevOps و امنیت با حضور استادان باتجربه.
+        </p>
+    </div>
+
+    <div class="catalog-hero__visual">
+        <span>&lt;/&gt;</span>
+        <small>LEARN · BUILD · GROW</small>
+    </div>
+</section>
+
+<section class="catalog-filter-panel">
+    <form method="get" class="catalog-filter-form">
+        <div class="catalog-search">
+            <span class="catalog-search__icon">⌕</span>
+
+            <input
+                type="search"
+                name="q"
+                value="{{ current_query }}"
+                placeholder="جست‌وجوی عنوان دوره، استاد یا تخصص..."
+                aria-label="جست‌وجوی دوره"
+            >
+        </div>
+
+        <select name="category" aria-label="دسته‌بندی">
+            <option value="">همه دسته‌بندی‌ها</option>
+
+            {% for category in categories %}
+                <option
+                    value="{{ category.slug }}"
+                    {% if current_category == category.slug %}
+                        selected
+                    {% endif %}
+                >
+                    {{ category.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select name="instructor" aria-label="استاد">
+            <option value="">همه استادان</option>
+
+            {% for instructor in instructors %}
+                <option
+                    value="{{ instructor.slug }}"
+                    {% if current_instructor == instructor.slug %}
+                        selected
+                    {% endif %}
+                >
+                    {{ instructor.full_name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button class="catalog-button catalog-button--primary" type="submit">
+            اعمال فیلتر
+        </button>
+
+        {% if current_query or current_category or current_instructor %}
+            <a
+                class="catalog-button catalog-button--ghost"
+                href="{% url 'catalog:course_list' %}"
+            >
+                پاک‌کردن
+            </a>
+        {% endif %}
+    </form>
+</section>
+
+<div class="catalog-section-heading">
+    <div>
+        <span>کاتالوگ آموزشی</span>
+        <h2>دوره‌های قابل ارائه</h2>
+    </div>
+
+    <strong>{{ paginator.count|default:0 }} دوره</strong>
+</div>
+
+<section class="course-grid">
+    {% for course in courses %}
+        <article class="course-card">
+            <div
+                class="course-card__cover"
+                style="--course-accent: {{ course.category.accent_color }};"
+            >
+                {% if course.cover_image_url %}
+                    <img
+                        src="{{ course.cover_image_url }}"
+                        alt="{{ course.title }}"
+                        loading="lazy"
+                    >
+                {% else %}
+                    <div class="course-card__placeholder">
+                        <span>&lt;/&gt;</span>
+                        <small>{{ course.category.name }}</small>
+                    </div>
+                {% endif %}
+
+                {% if course.is_featured %}
+                    <span class="course-featured-badge">
+                        دوره منتخب
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="course-card__body">
+                <div class="course-card__category">
+                    <span
+                        style="background: {{ course.category.accent_color }};"
+                    ></span>
+                    {{ course.category.name }}
+                </div>
+
+                <h3>
+                    <a href="{% url 'catalog:course_detail' course.slug %}">
+                        {{ course.title }}
+                    </a>
+                </h3>
+
+                <p>
+                    {{ course.short_description|default:course.description|truncatechars:125 }}
+                </p>
+
+                <div class="course-card__meta">
+                    <span>
+                        <b>{{ course.duration_hours }}</b>
+                        ساعت آموزش
+                    </span>
+
+                    <span>{{ course.get_level_display }}</span>
+                </div>
+
+                {% with offering=course.offerings.all|first %}
+                    {% if offering %}
+                        <a
+                            class="course-instructor"
+                            href="{% url 'catalog:instructor_detail' offering.instructor.slug %}"
+                        >
+                            {% if offering.instructor.image_url %}
+                                <img
+                                    src="{{ offering.instructor.image_url }}"
+                                    alt="{{ offering.instructor.full_name }}"
+                                    loading="lazy"
+                                >
+                            {% else %}
+                                <span class="course-instructor__avatar">
+                                    {{ offering.instructor.first_name|slice:":1" }}{{ offering.instructor.last_name|slice:":1" }}
+                                </span>
+                            {% endif %}
+
+                            <span>
+                                <small>مدرس دوره</small>
+                                <strong>
+                                    {{ offering.instructor.full_name }}
+                                </strong>
+                            </span>
+                        </a>
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <footer class="course-card__footer">
+                <div>
+                    <small>شهریه دوره</small>
+
+                    <strong>
+                        {% if course.price_toman %}
+                            {{ course.price_toman|intcomma }}
+                            <span>تومان</span>
+                        {% else %}
+                            تماس بگیرید
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <a
+                    href="{% url 'catalog:course_detail' course.slug %}"
+                    aria-label="مشاهده {{ course.title }}"
+                >
+                    مشاهده دوره
+                    <span>←</span>
+                </a>
+            </footer>
+        </article>
+    {% empty %}
+        <div class="catalog-empty">
+            <div class="catalog-empty__icon">⌕</div>
+            <h2>دوره‌ای پیدا نشد</h2>
+
+            {% if current_query or current_category or current_instructor %}
+                <p>
+                    عبارت یا فیلترهای انتخاب‌شده را تغییر دهید.
+                </p>
+
+                <a
+                    class="catalog-button catalog-button--primary"
+                    href="{% url 'catalog:course_list' %}"
+                >
+                    نمایش همه دوره‌ها
+                </a>
+            {% else %}
+                <p>
+                    اطلاعات دوره‌ها در مرحله بعد به کاتالوگ
+                    اضافه می‌شود.
+                </p>
+            {% endif %}
+        </div>
+    {% endfor %}
+</section>
+
+{% if is_paginated %}
+    <nav class="catalog-pagination" aria-label="صفحه‌بندی دوره‌ها">
+        {% if page_obj.has_previous %}
+            <a
+                href="?page={{ page_obj.previous_page_number }}&q={{ current_query|urlencode }}&category={{ current_category|urlencode }}&instructor={{ current_instructor|urlencode }}"
+            >
+                صفحه قبل
+            </a>
+        {% endif %}
+
+        <span>
+            صفحه {{ page_obj.number }}
+            از {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a
+                href="?page={{ page_obj.next_page_number }}&q={{ current_query|urlencode }}&category={{ current_category|urlencode }}&instructor={{ current_instructor|urlencode }}"
+            >
+                صفحه بعد
+            </a>
+        {% endif %}
+    </nav>
+{% endif %}
+{% endblock %}

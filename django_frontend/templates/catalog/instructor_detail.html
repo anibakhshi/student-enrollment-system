@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}{{ instructor.full_name }}{% endblock %}
+
+{% block content %}
+<section class="page-shell">
+    <a href="{% url 'catalog:instructor_list' %}">
+        بازگشت به استادان
+    </a>
+
+    <h1>{{ instructor.full_name }}</h1>
+    <p>{{ instructor.expertise }}</p>
+    <p>{{ instructor.bio }}</p>
+</section>
+{% endblock %}

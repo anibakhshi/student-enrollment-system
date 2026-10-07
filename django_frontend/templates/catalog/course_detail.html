@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.title }}{% endblock %}
+
+{% block content %}
+<section class="page-shell">
+    <a href="{% url 'catalog:course_list' %}">
+        بازگشت به دوره‌ها
+    </a>
+
+    <h1>{{ course.title }}</h1>
+    <p>{{ course.description }}</p>
+</section>
+{% endblock %}
