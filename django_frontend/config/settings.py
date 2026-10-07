@@ -32,6 +32,7 @@ INSTALLED_APPS = [
 
     # Project applications
     "dashboard",
+    "catalog",
 ]
 
 
