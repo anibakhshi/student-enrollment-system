@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}استادان آکادمی{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/catalog.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+<section class="catalog-hero catalog-hero--instructors">
+    <div class="catalog-hero__content">
+        <span class="catalog-eyebrow">منتورهای مسیر حرفه‌ای</span>
+
+        <h1>یادگیری در کنار استادان متخصص صنعت فناوری</h1>
+
+        <p>
+            پروفایل مدرس‌ها، حوزه تخصصی و دوره‌های در حال ارائه
+            را مشاهده کنید.
+        </p>
+    </div>
+
+    <div class="catalog-hero__visual">
+        <span>01</span>
+        <small>EXPERT INSTRUCTORS</small>
+    </div>
+</section>
+
+<section class="catalog-filter-panel">
+    <form method="get" class="instructor-search-form">
+        <div class="catalog-search">
+            <span class="catalog-search__icon">⌕</span>
+
+            <input
+                type="search"
+                name="q"
+                value="{{ current_query }}"
+                placeholder="جست‌وجوی نام استاد یا حوزه تخصصی..."
+                aria-label="جست‌وجوی استاد"
+            >
+        </div>
+
+        <button class="catalog-button catalog-button--primary" type="submit">
+            جست‌وجو
+        </button>
+
+        {% if current_query %}
+            <a
+                class="catalog-button catalog-button--ghost"
+                href="{% url 'catalog:instructor_list' %}"
+            >
+                پاک‌کردن
+            </a>
+        {% endif %}
+    </form>
+</section>
+
+<div class="catalog-section-heading">
+    <div>
+        <span>تیم آموزشی</span>
+        <h2>استادان آکادمی</h2>
+    </div>
+
+    <strong>{{ instructors|length }} استاد</strong>
+</div>
+
+<section class="instructor-grid">
+    {% for instructor in instructors %}
+        <article class="instructor-card">
+            <div class="instructor-card__visual">
+                {% if instructor.image_url %}
+                    <img
+                        src="{{ instructor.image_url }}"
+                        alt="{{ instructor.full_name }}"
+                        loading="lazy"
+                    >
+                {% else %}
+                    <div class="instructor-card__initials">
+                        {{ instructor.first_name|slice:":1" }}{{ instructor.last_name|slice:":1" }}
+                    </div>
+                {% endif %}
+
+                {% if instructor.is_featured %}
+                    <span class="instructor-card__featured">
+                        استاد منتخب
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="instructor-card__body">
+                <span class="instructor-card__label">
+                    مدرس آکادمی فناوری
+                </span>
+
+                <h3>{{ instructor.full_name }}</h3>
+                <p>{{ instructor.expertise }}</p>
+
+                <div class="instructor-card__stats">
+                    <span>
+                        <strong>{{ instructor.active_course_count }}</strong>
+                        دوره فعال
+                    </span>
+
+                    <span>
+                        <strong>IT</strong>
+                        حوزه تخصصی
+                    </span>
+                </div>
+
+                <a
+                    class="instructor-card__link"
+                    href="{% url 'catalog:instructor_detail' instructor.slug %}"
+                >
+                    مشاهده پروفایل و دوره‌ها
+                    <span>←</span>
+                </a>
+            </div>
+        </article>
+    {% empty %}
+        <div class="catalog-empty">
+            <div class="catalog-empty__icon">◇</div>
+            <h2>استادی پیدا نشد</h2>
+            <p>عبارت جست‌وجو را تغییر دهید.</p>
+
+            <a
+                class="catalog-button catalog-button--primary"
+                href="{% url 'catalog:instructor_list' %}"
+            >
+                نمایش همه استادان
+            </a>
+        </div>
+    {% endfor %}
+</section>
+{% endblock %}

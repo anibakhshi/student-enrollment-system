@@ -1,0 +1,173 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b1220"
+    >
+
+    <title>
+        {% block title %}
+            {{ page_title }}
+        {% endblock %}
+        | سامانه آموزشی
+    </title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+>
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/app.css' %}"
+>
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/theme.css' %}"
+>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <div class="app-shell">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar__brand">
+                <div class="brand-mark">SE</div>
+
+                <div>
+                    <strong>آکادمی فناوری</strong>
+                    <span>مدیریت دوره‌های تخصصی IT</span>
+                </div>
+
+                <button
+                    class="sidebar__close"
+                    id="sidebarClose"
+                    type="button"
+                    aria-label="بستن منو"
+                >
+                    ×
+                </button>
+            </div>
+
+            <nav class="sidebar__nav">
+                <p class="nav-title">مدیریت اصلی</p>
+
+                <a
+                    class="nav-item {% if active_page == 'dashboard' %}active{% endif %}"
+                    href="{% url 'dashboard:index' %}"
+                >
+                    <span class="nav-icon">⌂</span>
+                    <span>داشبورد</span>
+                </a>
+
+                <a class="nav-item disabled" href="#">
+                    <span class="nav-icon">◉</span>
+                    <span>دانشجویان</span>
+                </a>
+
+                <a class="nav-item {% if active_page == 'instructors' %}active{% endif %}" href="{% url 'catalog:instructor_list' %}">
+                    <span class="nav-icon">◇</span>
+                    <span>استادان</span>
+                </a>
+
+                <a class="nav-item {% if active_page == 'courses' %}active{% endif %}" href="{% url 'catalog:course_list' %}">
+                    <span class="nav-icon">▱</span>
+                    <span>دوره‌ها</span>
+                </a>
+
+                <p class="nav-title">عملیات آموزشی</p>
+
+                <a class="nav-item disabled" href="#">
+                    <span class="nav-icon">✓</span>
+                    <span>ثبت‌نام‌ها</span>
+                </a>
+
+                <a class="nav-item disabled" href="#">
+                    <span class="nav-icon">₿</span>
+                    <span>پرداخت‌ها</span>
+                </a>
+            </nav>
+
+            <div class="sidebar__footer">
+                <div
+                    class="service-state {% if api_available %}online{% else %}offline{% endif %}"
+                >
+                    <span class="service-dot"></span>
+
+                    <div>
+                        <strong>
+                            {% if api_available %}
+                                Go API فعال
+                            {% else %}
+                                Go API قطع
+                            {% endif %}
+                        </strong>
+
+                        <small>{{ api_base_url }}</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <section class="main-area">
+            <header class="topbar">
+                <button
+                    class="menu-button"
+                    id="menuButton"
+                    type="button"
+                    aria-label="نمایش منو"
+                >
+                    ☰
+                </button>
+
+                <div class="topbar__title">
+                    <span>پنل مدیریت</span>
+                    <strong>{{ page_title }}</strong>
+                </div>
+
+                <div class="topbar__profile">
+                    <div>
+                        <strong>آنیتا بخشی</strong>
+                        <span>مدیر سیستم</span>
+                    </div>
+
+                    <div class="profile-avatar">AB</div>
+                </div>
+            </header>
+
+            <main class="page-content">
+                {% if errors %}
+                    <section class="alert alert--danger">
+                        <strong>بخشی از اطلاعات دریافت نشد</strong>
+
+                        {% for error in errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </section>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </section>
+    </div>
+
+    <script src="{% static 'js/app.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -35,3 +35,14 @@ temp/
 
 # Uploaded student images
 uploads/
+
+# Build artifacts
+bin/
+dist/
+
+# Django and Python
+django_frontend/.venv/
+django_frontend/db.sqlite3
+django_frontend/staticfiles/
+django_frontend/**/__pycache__/
+django_frontend/**/*.py[cod]
