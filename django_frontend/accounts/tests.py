@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
-from django.test import TestCase
-
+from django.test import TestCase, override_settings
+from django.urls import reverse
 from .models import UserProfile
 
 
@@ -96,3 +96,128 @@ class UserProfileTests(TestCase):
             UserProfile.objects.filter(national_code="").count(),
             2,
         )
+
+        from django.urls import reverse
+
+@override_settings(
+    STORAGES={
+        "default": {
+            "BACKEND": (
+                "django.core.files.storage."
+                "FileSystemStorage"
+            ),
+        },
+        "staticfiles": {
+            "BACKEND": (
+                "django.contrib.staticfiles.storage."
+                "StaticFilesStorage"
+            ),
+        },
+    }
+)
+
+class AuthenticationViewTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.password = "StrongPassword123!"
+        cls.user = User.objects.create_user(
+            username="anita",
+            email="anita@example.com",
+            password=cls.password,
+            first_name="آنیتا",
+            last_name="بخشی",
+        )
+
+    def test_login_page_is_available(self):
+        response = self.client.get(
+            reverse("accounts:login")
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "ورود به حساب کاربری")
+        self.assertContains(response, "نام کاربری")
+        self.assertContains(response, "رمز عبور")
+
+    def test_invalid_login_displays_persian_error(self):
+        response = self.client.post(
+            reverse("accounts:login"),
+            {
+                "username": self.user.username,
+                "password": "IncorrectPassword!",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "نام کاربری یا رمز عبور صحیح نیست",
+        )
+        self.assertFalse(
+            response.wsgi_request.user.is_authenticated
+        )
+
+    def test_valid_login_redirects_to_dashboard(self):
+        response = self.client.post(
+            reverse("accounts:login"),
+            {
+                "username": self.user.username,
+                "password": self.password,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("dashboard:index"),
+            fetch_redirect_response=False,
+        )
+
+    def test_anonymous_user_is_redirected_from_profile(self):
+        profile_url = reverse("accounts:profile")
+
+        response = self.client.get(profile_url)
+
+        expected_url = (
+            f"{reverse('accounts:login')}"
+            f"?next={profile_url}"
+        )
+
+        self.assertRedirects(
+            response,
+            expected_url,
+            fetch_redirect_response=False,
+        )
+
+    def test_authenticated_user_can_view_profile(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse("accounts:profile")
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "آنیتا بخشی")
+        self.assertContains(response, "دانشجو")
+        self.assertContains(response, self.user.email)
+
+    def test_logout_requires_post_and_ends_session(self):
+        self.client.force_login(self.user)
+
+        get_response = self.client.get(
+            reverse("accounts:logout")
+        )
+        self.assertEqual(get_response.status_code, 405)
+
+        post_response = self.client.post(
+            reverse("accounts:logout")
+        )
+
+        self.assertRedirects(
+            post_response,
+            reverse("accounts:login"),
+            fetch_redirect_response=False,
+        )
+
+        profile_response = self.client.get(
+            reverse("accounts:profile")
+        )
+        self.assertEqual(profile_response.status_code, 302)
