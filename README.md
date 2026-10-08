@@ -1,8 +1,8 @@
 # Student Enrollment System
 
-A production-oriented REST API for managing students, instructors, courses, enrollments, profile images, and payments.
+A production-oriented student enrollment platform consisting of a Go REST API and a professional Django web interface for managing students, instructors, courses, enrollments, profile images, payments, and educational catalog data.
 
-The project is implemented in Go using a layered architecture, PostgreSQL persistence, automated SQL migrations, structured logging, Docker Compose, validation, concurrency-safe repositories, and comprehensive tests.
+The backend is implemented in Go using layered architecture, PostgreSQL persistence, automated SQL migrations, structured logging, validation, and concurrency-safe repositories. The Django GUI provides a responsive Persian dashboard, searchable course and instructor pages, a synchronized Sematec course catalog, and production deployment through Gunicorn and WhiteNoise.
 
 ## Project Information
 
@@ -11,6 +11,8 @@ The project is implemented in Go using a layered architecture, PostgreSQL persis
 - **Language:** Go 1.22
 - **Database:** PostgreSQL 16
 - **API Port:** `8081`
+- **GUI Framework:** Django 5.2
+- **GUI Port:** `8000`
 
 ## Features
 
@@ -67,6 +69,32 @@ pending → succeeded → refunded
        ↘ failed
 ```
 
+### Django Web Interface
+
+- Professional RTL Persian dashboard
+- Responsive desktop and mobile design
+- Live connection to the Go REST API
+- Student, instructor, course, enrollment, and payment statistics
+- Searchable and filterable course catalog
+- Instructor directory and profile pages
+- Individual course detail pages
+- Unicode-compatible Persian and English URLs
+- Graceful handling of temporary Go API failures
+- Production execution with Gunicorn
+- Static-file delivery through WhiteNoise
+
+### Educational Catalog
+
+- Advanced Django models for categories, instructors, courses, and offerings
+- Repeatable seed command for initial catalog data
+- Synchronization command for verified Sematec catalog information
+- 53 instructor profiles
+- 118 course records
+- 77 active instructor-course offerings
+- Course filtering by category and instructor
+- Instructor and course search
+- Persistent SQLite catalog database in a Docker volume
+
 ### Infrastructure
 
 - PostgreSQL persistence using `pgx`
@@ -79,36 +107,54 @@ pending → succeeded → refunded
 - Structured JSON logs
 - Request ID middleware
 - Non-root API container
+- Separate non-root Django GUI container
+- Gunicorn production WSGI server
+- WhiteNoise compressed static files
+- Persistent Django catalog volume
+- Docker health check for the GUI
+- Automatic Django migrations and catalog seeding
+- Optional one-time Sematec catalog synchronization
 - Unit, integration, concurrency, and race-detector tests
 
 ## Technology Stack
 
 | Component | Technology |
 |---|---|
-| Language | Go 1.22 |
-| HTTP server | Go `net/http` |
-| Database | PostgreSQL 16 |
+| Backend language | Go 1.22 |
+| Backend HTTP server | Go `net/http` |
+| GUI language | Python 3.12 |
+| GUI framework | Django 5.2 |
+| Production WSGI server | Gunicorn |
+| Static-file serving | WhiteNoise |
+| API database | PostgreSQL 16 |
+| Catalog database | SQLite |
 | PostgreSQL driver | `pgx/v5` |
+| Catalog synchronization | Requests and Beautiful Soup |
 | Containers | Docker |
 | Orchestration | Docker Compose |
 | Database UI | Adminer |
-| Testing | Go `testing`, `httptest`, Race Detector |
-| Logging | Go `log/slog` |
+| Go testing | `testing`, `httptest`, Race Detector |
+| Django testing | Django TestCase |
+| Logging | Go `log/slog` and Gunicorn logs |
 
 ## Architecture
 
-The application follows a layered architecture:
+The application combines a layered Go backend with a server-rendered Django GUI:
 
 ```mermaid
 flowchart TD
-    Client["HTTP Client"] --> Middleware["Request ID and Logging"]
-    Middleware --> Handler["HTTP Handlers"]
+    Browser["Web Browser"] --> GUI["Django GUI :8000"]
+    APIClient["REST API Client"] --> Middleware["Request ID and Logging"]
+    GUI --> Middleware
+    GUI --> Catalog["Django Catalog Services"]
+    Catalog --> SQLite["Persistent SQLite Catalog"]
+    Middleware --> Handler["Go HTTP Handlers :8081"]
     Handler --> Service["Business Services"]
     Service --> Repository["Repository Interfaces"]
-    Repository --> PostgreSQL["PostgreSQL Repositories"]
+    Repository --> PostgreSQLRepo["PostgreSQL Repositories"]
     Repository --> Memory["In-memory Repositories"]
-    PostgreSQL --> Database["PostgreSQL"]
-    Handler --> Storage["Local Image Storage"]
+    PostgreSQLRepo --> PostgreSQL["PostgreSQL 16"]
+    Handler --> Storage["Profile Image Storage"]
 ```
 
 ### Layers
@@ -120,6 +166,12 @@ flowchart TD
 - **Database:** PostgreSQL connection pool
 - **Storage:** secure local profile-image storage
 - **Middleware:** structured request logging and request IDs
+- **Django Dashboard:** server-rendered RTL management interface
+- **Catalog Models:** course, category, instructor, and offering persistence
+- **API Client:** communication between Django and the Go REST API
+- **Catalog Synchronizer:** repeatable synchronization of verified educational data
+- **Gunicorn:** production WSGI process manager
+- **WhiteNoise:** compressed static-file delivery
 
 ## Database Relationships
 
@@ -147,6 +199,28 @@ erDiagram
 │   ├── repository/
 │   ├── service/
 │   └── storage/
+├── django_frontend/
+│   ├── catalog/
+│   │   ├── management/
+│   │   │   └── commands/
+│   │   │       ├── seed_catalog.py
+│   │   │       └── sync_sematec_catalog.py
+│   │   ├── migrations/
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   └── urls.py
+│   ├── dashboard/
+│   │   ├── api_client.py
+│   │   ├── views.py
+│   │   └── tests.py
+│   ├── config/
+│   ├── static/
+│   ├── templates/
+│   ├── .dockerignore
+│   ├── Dockerfile
+│   ├── docker-entrypoint.sh
+│   ├── manage.py
+│   └── requirements.txt
 ├── migrations/
 │   ├── 000001_create_students.up.sql
 │   ├── 000001_create_students.down.sql
@@ -184,6 +258,7 @@ For the Docker-based setup:
 For local development:
 
 - Go 1.22 or newer
+- Python 3.10 or newer
 - Docker and Docker Compose for PostgreSQL
 
 ## Quick Start with Docker
@@ -215,7 +290,14 @@ Alternatively:
 docker compose up -d --build
 ```
 
-The migration container automatically applies pending migrations before the API starts.
+The startup process automatically:
+
+1. Starts PostgreSQL and applies pending Go API migrations
+2. Starts the Go REST API on port `8081`
+3. Applies Django migrations
+4. Loads the initial catalog and optionally synchronizes Sematec data once
+5. Collects static files through WhiteNoise
+6. Starts the Django GUI through Gunicorn on port `8000`
 
 ### 4. Check the containers
 
@@ -223,10 +305,13 @@ The migration container automatically applies pending migrations before the API 
 docker compose ps -a
 ```
 
-### 5. Check API health
+### 5. Check API and GUI health
 
 ```bash
 curl -i http://localhost:8081/health
+curl -I http://localhost:8000/
+curl -I http://localhost:8000/courses/
+curl -I http://localhost:8000/instructors/
 ```
 
 Expected status:
@@ -239,6 +324,9 @@ HTTP/1.1 200 OK
 
 | Service | Address |
 |---|---|
+| Django GUI | http://localhost:8000 |
+| Course catalog | http://localhost:8000/courses/ |
+| Instructor directory | http://localhost:8000/instructors/ |
 | REST API | http://localhost:8081 |
 | Health endpoint | http://localhost:8081/health |
 | Adminer | http://localhost:18080 |
@@ -278,6 +366,28 @@ This command:
 4. Loads variables from `.env`
 5. Executes `go run ./cmd/api`
 
+In a second terminal, create and activate the Django virtual environment:
+
+```bash
+python3 -m venv django_frontend/.venv
+source django_frontend/.venv/bin/activate
+python -m pip install -r django_frontend/requirements.txt
+```
+
+Apply Django migrations, seed the catalog, and start the development server:
+
+```bash
+python django_frontend/manage.py migrate
+python django_frontend/manage.py seed_catalog
+python django_frontend/manage.py runserver 0.0.0.0:8000
+```
+
+To synchronize the verified Sematec catalog manually:
+
+```bash
+python django_frontend/manage.py sync_sematec_catalog --delay 0.2
+```
+
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -293,6 +403,14 @@ This command:
 | `POSTGRES_HOST_PORT` | `5433` | PostgreSQL host port |
 | `DATABASE_URL` | PostgreSQL URL | API database connection string |
 | `UPLOAD_DIR` | `./uploads` | Profile-image storage directory |
+| `DJANGO_SECRET_KEY` | No production default | Django cryptographic secret |
+| `DJANGO_DEBUG` | `false` in Docker | Enable Django debug mode |
+| `DJANGO_ALLOWED_HOSTS` | Local Docker hosts | Permitted Django host names |
+| `DJANGO_DB_PATH` | `/app/data/db.sqlite3` in Docker | Persistent catalog database path |
+| `GO_API_BASE_URL` | `http://api:8081` in Docker | Go API address used by Django |
+| `GO_API_TIMEOUT` | `10` | Django-to-Go API timeout in seconds |
+| `DJANGO_SYNC_SEMATEC_ON_START` | `true` | Run the initial Sematec synchronization |
+| `SEMATEC_SYNC_DELAY` | `0.2` | Delay between catalog requests |
 
 Do not commit the local `.env` file. It is excluded through `.gitignore`.
 
@@ -542,6 +660,15 @@ go test ./...
 go test -race ./...
 ```
 
+Run the Django checks and test suite:
+
+```bash
+source django_frontend/.venv/bin/activate
+cd django_frontend
+python manage.py check
+python manage.py test --verbosity 2
+```
+
 The test suite covers:
 
 - Models and validation
@@ -555,6 +682,11 @@ The test suite covers:
 - Profile-image upload validation
 - Payment lifecycle transitions
 - Race detection
+- Dashboard API integration and failure handling
+- Course and instructor catalog views
+- Search and filtering behavior
+- Catalog seed idempotency
+- Sematec synchronization and dry-run rollback
 
 ## Project Scripts
 
@@ -566,7 +698,10 @@ The test suite covers:
 | `./scripts/build.sh` | Build the Docker API image |
 | `./scripts/test.sh` | Run formatting, vet, tests, and Race Detector |
 | `./scripts/logs.sh api` | Follow API logs |
+| `./scripts/logs.sh gui` | Follow Django and Gunicorn logs |
 | `./scripts/logs.sh postgres` | Follow PostgreSQL logs |
+| `./scripts/logs.sh migrate` | Follow migration logs |
+| `./scripts/logs.sh adminer` | Follow Adminer logs |
 | `./scripts/migrate-up.sh` | Apply pending migrations |
 | `./scripts/migrate-down.sh` | Roll back the database after confirmation |
 
@@ -590,6 +725,21 @@ Follow API logs:
 ./scripts/logs.sh api
 ```
 
+Follow Django GUI logs:
+
+```bash
+./scripts/logs.sh gui
+```
+
+Open the main interfaces:
+
+```bash
+explorer.exe "http://localhost:8000"
+explorer.exe "http://localhost:8000/courses/"
+explorer.exe "http://localhost:8000/instructors/"
+explorer.exe "http://localhost:18080"
+```
+
 Stop services while preserving data:
 
 ```bash
@@ -602,7 +752,7 @@ Stop services and remove volumes:
 docker compose down -v
 ```
 
-> Warning: removing volumes permanently deletes database records and uploaded images.
+> Warning: removing volumes permanently deletes PostgreSQL records, uploaded images, and the Django catalog database.
 
 ## HTTP Status Codes
 
@@ -641,10 +791,13 @@ The same request ID is returned in the response headers and included in structur
 
 ## Data Persistence
 
-Docker Compose uses two named volumes:
+Docker Compose uses three named volumes:
 
 - `student_enrollment_postgres_data`
 - `student_enrollment_uploads`
+- `student_enrollment_django_data`
+
+The Django volume stores the SQLite catalog database and the one-time Sematec synchronization marker. This preserves the 53 instructors, 118 courses, and 77 active offerings between container restarts and rebuilds.
 
 Running the following command preserves data:
 
@@ -661,11 +814,11 @@ docker compose down -v
 ## Current Version
 
 ```text
-v1.0.0
+v1.1.0
 ```
 
 ## Author
 
 **Anita Bakhshi**
 
-Student Enrollment System — implemented with Go, PostgreSQL, Docker, layered architecture, automated migrations, secure uploads, enrollment capacity control, and payment lifecycle management.
+Student Enrollment System — implemented with Go, Django, PostgreSQL, SQLite, Docker Compose, layered architecture, automated migrations, secure uploads, enrollment capacity control, payment lifecycle management, and a synchronized educational catalog.
