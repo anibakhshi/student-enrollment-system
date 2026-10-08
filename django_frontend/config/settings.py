@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     # Project applications
     "dashboard",
     "catalog",
+    "accounts.apps.AccountsConfig",
 ]
 
 
@@ -131,7 +132,8 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
-
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
 STORAGES = {
     "default": {
         "BACKEND": (
@@ -148,6 +150,15 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Authentication configuration
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "dashboard:index"
+LOGOUT_REDIRECT_URL = "accounts:login"
+
+SESSION_COOKIE_AGE = 60 * 60 * 8
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
 
 # Go REST API configuration
 GO_API_BASE_URL = os.getenv(
