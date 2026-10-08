@@ -8,13 +8,12 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIRECTORY/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 SERVICE_NAME="${1:-api}"
-
 case "$SERVICE_NAME" in
-    api|postgres|migrate|adminer)
+    api|gui|postgres|migrate|adminer)
         ;;
     *)
         echo "Error: unknown service: $SERVICE_NAME"
-        echo "Available services: api, postgres, migrate, adminer"
+        echo "Available services: api, gui, postgres, migrate, adminer"
         exit 1
         ;;
 esac

@@ -39,6 +39,55 @@ services:
     networks:
       - student_network
 
+  gui:
+    build:
+      context: ./django_frontend
+      dockerfile: Dockerfile
+
+    image: student-enrollment-gui:local
+    container_name: student_enrollment_gui
+    restart: unless-stopped
+    init: true
+
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,gui}
+      DJANGO_DB_PATH: /app/data/db.sqlite3
+      GO_API_BASE_URL: http://api:8081
+      GO_API_TIMEOUT: 10
+      DJANGO_SYNC_SEMATEC_ON_START: ${DJANGO_SYNC_SEMATEC_ON_START:-true}
+      SEMATEC_SYNC_DELAY: ${SEMATEC_SYNC_DELAY:-0.2}
+
+    depends_on:
+      api:
+        condition: service_started
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - django_data:/app/data
+
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >
+          import urllib.request;
+          urllib.request.urlopen(
+          'http://localhost:8000/',
+          timeout=4
+          )
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+    networks:
+      - student_network
+
   uploads-init:
     image: alpine:3.20
     container_name: student_enrollment_uploads_init
@@ -177,6 +226,9 @@ volumes:
 
   student_uploads:
     name: student_enrollment_uploads
+
+  django_data:
+    name: student_enrollment_django_data
 
 networks:
   student_network:
