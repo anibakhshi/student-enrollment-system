@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "dashboard",
     "catalog",
     "accounts.apps.AccountsConfig",
+    "student_management",
 ]
 
 

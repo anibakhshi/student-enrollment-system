@@ -1,7 +1,7 @@
 from collections import Counter
 from datetime import datetime
 from typing import Any
-
+from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.shortcuts import render
 
@@ -72,7 +72,7 @@ def _status_class(status: str) -> str:
 
     return classes.get(status, "muted")
 
-
+@login_required
 def index(request):
     errors: list[str] = []
 
