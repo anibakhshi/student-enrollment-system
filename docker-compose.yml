@@ -55,6 +55,7 @@ services:
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,gui}
       DJANGO_DB_PATH: /app/data/db.sqlite3
       GO_API_BASE_URL: http://api:8081
+      GO_API_PUBLIC_URL: ${GO_API_PUBLIC_URL:-http://localhost:8081}
       GO_API_TIMEOUT: 10
       DJANGO_SYNC_SEMATEC_ON_START: ${DJANGO_SYNC_SEMATEC_ON_START:-true}
       SEMATEC_SYNC_DELAY: ${SEMATEC_SYNC_DELAY:-0.2}

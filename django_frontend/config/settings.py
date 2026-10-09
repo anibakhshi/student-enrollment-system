@@ -167,6 +167,11 @@ GO_API_BASE_URL = os.getenv(
     "http://localhost:8081",
 ).rstrip("/")
 
+GO_API_PUBLIC_URL = os.getenv(
+    "GO_API_PUBLIC_URL",
+    "http://localhost:8081",
+).rstrip("/")
+
 GO_API_TIMEOUT = float(
     os.getenv("GO_API_TIMEOUT", "10")
 )

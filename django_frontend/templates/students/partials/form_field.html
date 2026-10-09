@@ -1,0 +1,18 @@
+<div class="student-form-group {% if field.errors %}has-error{% endif %}">
+    <label for="{{ field.id_for_label }}">
+        {{ field.label }}
+        <span aria-hidden="true">*</span>
+    </label>
+
+    {{ field }}
+
+    {% if field.help_text %}
+        <small>{{ field.help_text }}</small>
+    {% endif %}
+
+    {% for error in field.errors %}
+        <span class="student-field-error">
+            {{ error }}
+        </span>
+    {% endfor %}
+</div>

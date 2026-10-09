@@ -94,22 +94,13 @@
                 </a>
 
                 {% if user.is_authenticated and user.profile.can_manage_education %}
-                    <a
-                        class="nav-item {% if active_page == 'students' %}active{% endif %}"
-                        href="#"
-                    >
-                        <span class="nav-icon">◉</span>
-                        <span>دانشجویان</span>
-                    </a>
-                {% else %}
-                    <a
-                        class="nav-item disabled"
-                        href="#"
-                        aria-disabled="true"
-                    >
-                        <span class="nav-icon">◉</span>
-                        <span>دانشجویان</span>
-                    </a>
+                <a
+                    class="nav-item {% if active_page == 'students' %}active{% endif %}"
+                    href="{% url 'students:list' %}"
+                >
+                <span class="nav-icon">◉</span>
+                <span>دانشجویان</span>
+                </a>
                 {% endif %}
 
                 <a

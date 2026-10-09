@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ student.full_name|default:"جزئیات دانشجو" }}
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/students/students.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+<section class="students-page">
+    <nav class="student-breadcrumb">
+        <a href="{% url 'students:list' %}">
+            مدیریت دانشجویان
+        </a>
+
+        <span>←</span>
+        <strong>جزئیات پرونده</strong>
+    </nav>
+
+    {% if api_error %}
+        <section class="student-api-error" role="alert">
+            <div class="student-api-error__icon">!</div>
+
+            <div>
+                <strong>دریافت اطلاعات ممکن نشد</strong>
+                <p>{{ api_error }}</p>
+            </div>
+        </section>
+    {% elif student %}
+        <header class="student-profile-hero">
+            <div class="student-profile-hero__identity">
+                <div class="student-profile-avatar">
+                    {% if student.profile_image_url %}
+                        <img
+                            src="{{ student.profile_image_url }}"
+                            alt="تصویر {{ student.full_name }}"
+                        >
+                    {% else %}
+                        <span>{{ student.initials }}</span>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <span class="students-eyebrow">
+                        پرونده دانشجویی شماره {{ student.id }}
+                    </span>
+
+                    <h1>{{ student.full_name }}</h1>
+
+                    <div class="student-profile-status">
+                        <span></span>
+                        دانشجوی فعال سامانه
+                    </div>
+                </div>
+            </div>
+
+            <div class="student-profile-hero__actions">
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'students:list' %}"
+                >
+                    بازگشت به فهرست
+                </a>
+
+                <a
+                    class="student-primary-button"
+                    href="{% url 'students:update' student.id %}"
+                >
+                    ویرایش اطلاعات
+                </a>
+            </div>
+        </header>
+
+        <div class="student-detail-layout">
+            <section class="student-detail-panel">
+                <div class="student-section-heading">
+                    <div>
+                        <span>اطلاعات هویتی</span>
+                        <h2>مشخصات اصلی دانشجو</h2>
+                    </div>
+
+                    <span class="student-section-icon">◎</span>
+                </div>
+
+                <div class="student-detail-grid">
+                    <div class="student-detail-item">
+                        <span>نام</span>
+                        <strong>
+                            {{ student.first_name|default:"—" }}
+                        </strong>
+                    </div>
+
+                    <div class="student-detail-item">
+                        <span>نام خانوادگی</span>
+                        <strong>
+                            {{ student.last_name|default:"—" }}
+                        </strong>
+                    </div>
+
+                    <div class="student-detail-item">
+                        <span>سن</span>
+                        <strong>
+                            {% if student.age %}
+                                {{ student.age }} سال
+                            {% else %}
+                                —
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div class="student-detail-item">
+                        <span>کد ملی</span>
+                        <strong dir="ltr">
+                            {{ student.national_code|default:"—" }}
+                        </strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="student-detail-panel">
+                <div class="student-section-heading">
+                    <div>
+                        <span>اطلاعات ارتباطی</span>
+                        <h2>راه‌های تماس با دانشجو</h2>
+                    </div>
+
+                    <span class="student-section-icon">◇</span>
+                </div>
+
+                <div class="student-detail-grid">
+                    <div class="student-detail-item">
+                        <span>شماره موبایل</span>
+
+                        {% if student.phone %}
+                            <a
+                                href="tel:{{ student.phone }}"
+                                dir="ltr"
+                            >
+                                {{ student.phone }}
+                            </a>
+                        {% else %}
+                            <strong>—</strong>
+                        {% endif %}
+                    </div>
+
+                    <div class="student-detail-item">
+                        <span>ایمیل</span>
+
+                        {% if student.email %}
+                            <a
+                                href="mailto:{{ student.email }}"
+                                dir="ltr"
+                            >
+                                {{ student.email }}
+                            </a>
+                        {% else %}
+                            <strong>—</strong>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <aside class="student-record-panel">
+                <div class="student-section-heading">
+                    <div>
+                        <span>اطلاعات سیستمی</span>
+                        <h2>وضعیت پرونده</h2>
+                    </div>
+                </div>
+
+                <div class="student-record-list">
+                    <div>
+                        <span>شناسه سیستمی</span>
+                        <strong>{{ student.id }}</strong>
+                    </div>
+
+                    <div>
+                        <span>تاریخ ایجاد</span>
+                        <strong dir="ltr">
+                            {{ student.created_at|default:"—" }}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>آخرین به‌روزرسانی</span>
+                        <strong dir="ltr">
+                            {{ student.updated_at|default:"—" }}
+                        </strong>
+                    </div>
+                </div>
+
+                <div class="student-danger-zone">
+                    <strong>عملیات حساس</strong>
+
+                    <p>
+                        حذف دانشجو می‌تواند روی ثبت‌نام‌ها و
+                        سوابق مرتبط اثر بگذارد.
+                    </p>
+
+                    <a
+                        class="student-danger-button"
+                        href="{% url 'students:delete' student.id %}"
+                    >
+                        حذف دانشجو
+                    </a>
+                </div>
+            </aside>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
