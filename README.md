@@ -72,6 +72,13 @@ pending → succeeded → refunded
 ### Django Web Interface
 
 - Professional RTL Persian dashboard
+- Secure authentication and user profiles
+- Role-based access control
+- Protected management routes
+- Complete student management interface
+- Complete instructor management interface
+- Complete course management interface
+- Complete enrollment management interface
 - Responsive desktop and mobile design
 - Live connection to the Go REST API
 - Student, instructor, course, enrollment, and payment statistics
@@ -406,6 +413,13 @@ python django_frontend/manage.py sync_sematec_catalog --delay 0.2
 | `DJANGO_SECRET_KEY` | No production default | Django cryptographic secret |
 | `DJANGO_DEBUG` | `false` in Docker | Enable Django debug mode |
 | `DJANGO_ALLOWED_HOSTS` | Local Docker hosts | Permitted Django host names |
+| `DJANGO_SECURE_SSL_REDIRECT` | `false` | Redirect HTTP requests to HTTPS |
+| `DJANGO_SESSION_COOKIE_SECURE` | `false` | Send session cookies only through HTTPS |
+| `DJANGO_CSRF_COOKIE_SECURE` | `false` | Send CSRF cookies only through HTTPS |
+| `DJANGO_SECURE_HSTS_SECONDS` | `0` | HSTS duration in seconds |
+| `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` | `false` | Apply HSTS to subdomains |
+| `DJANGO_SECURE_HSTS_PRELOAD` | `false` | Enable the HSTS preload directive |
+| `DJANGO_TRUST_PROXY_SSL_HEADER` | `false` | Trust the reverse-proxy HTTPS header |
 | `DJANGO_DB_PATH` | `/app/data/db.sqlite3` in Docker | Persistent catalog database path |
 | `GO_API_BASE_URL` | `http://api:8081` in Docker | Go API address used by Django |
 | `GO_API_TIMEOUT` | `10` | Django-to-Go API timeout in seconds |
@@ -814,8 +828,27 @@ docker compose down -v
 ## Current Version
 
 ```text
-v1.1.0
+v1.2.0
 ```
+
+### v1.2.0 Highlights
+
+- Secure login, logout, and user-profile workflows
+- Administrator, education-staff, instructor, and student roles
+- Role-protected dashboard and management routes
+- Student, instructor, course, and enrollment management interfaces
+- Search, filtering, validation, and Persian API error handling
+- Configurable HTTPS redirect, secure cookies, HSTS, and proxy SSL support
+- 91 passing Django tests
+- Successful Go tests and Race Detector checks
+- Healthy Docker Compose deployment
+
+### Planned for Future Versions
+
+- Django payment-management interface
+- Educational calendar
+- Exam management
+- Certificate issuance
 
 ## Author
 
