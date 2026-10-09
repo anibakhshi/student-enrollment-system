@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    مدیریت دوره‌ها
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/courses_management/courses.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+<section class="students-page">
+    <header class="students-hero">
+        <div class="students-hero__content">
+            <span class="students-eyebrow">
+                مدیریت چرخه آموزشی
+            </span>
+
+            <h1>مدیریت دوره‌ها</h1>
+
+            <p>
+                دوره‌های آموزشی، استاد، قیمت، ظرفیت،
+                زمان‌بندی و وضعیت ثبت‌نام را از یک فضای
+                یکپارچه مدیریت کنید.
+            </p>
+
+            <div class="students-hero__stats">
+                <div class="students-mini-stat">
+                    <strong>{{ total_courses }}</strong>
+                    <span>دوره در نتایج فعلی</span>
+                </div>
+
+                <div class="students-mini-stat">
+                    <strong>
+                        {{ status_counts.open|default:0 }}
+                    </strong>
+                    <span>باز برای ثبت‌نام</span>
+                </div>
+
+                <div class="students-mini-stat">
+                    <strong>
+                        {{ status_counts.draft|default:0 }}
+                    </strong>
+                    <span>پیش‌نویس</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="students-hero__actions">
+            <a
+                class="student-primary-button"
+                href="{% url 'course_management:create' %}"
+            >
+                <span class="button-icon">＋</span>
+                <span>ثبت دوره جدید</span>
+            </a>
+        </div>
+    </header>
+
+    {% if api_error %}
+        <section class="student-api-error" role="alert">
+            <div class="student-api-error__icon">!</div>
+
+            <div>
+                <strong>
+                    دریافت بخشی از اطلاعات ممکن نشد
+                </strong>
+                <p>{{ api_error }}</p>
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="students-toolbar courses-toolbar">
+        <form
+            class="student-search-form course-filter-form"
+            method="get"
+            action="{% url 'course_management:list' %}"
+        >
+            <div class="student-search-box">
+                <span class="student-search-icon">⌕</span>
+                {{ search_form.q }}
+
+                {% if current_query %}
+                    <button
+                        class="student-search-clear"
+                        type="button"
+                        aria-label="پاک‌کردن جست‌وجو"
+                        onclick="this.form.q.value=''; this.form.submit();"
+                    >
+                        ×
+                    </button>
+                {% endif %}
+            </div>
+
+            <div class="course-filter-select">
+                {{ search_form.status }}
+            </div>
+
+            <div class="course-filter-select course-filter-select--instructor">
+                {{ search_form.instructor }}
+            </div>
+
+            <button
+                class="student-secondary-button"
+                type="submit"
+            >
+                اعمال فیلتر
+            </button>
+
+            {% if current_query or current_status or current_instructor %}
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'course_management:list' %}"
+                >
+                    حذف فیلترها
+                </a>
+            {% endif %}
+        </form>
+
+        <div class="students-toolbar__meta">
+            {% if current_query %}
+                <span>
+                    نتیجه جست‌وجوی
+                    <strong>«{{ current_query }}»</strong>
+                </span>
+            {% else %}
+                <span>
+                    اطلاعات دوره‌ها از سرویس اصلی Go
+                </span>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if courses %}
+        <section class="students-grid courses-grid">
+            {% for course in courses %}
+                <article class="student-card course-card">
+                    <div class="course-card__header">
+                        <div>
+                            <span class="course-code">
+                                {{ course.code }}
+                            </span>
+
+                            <span class="course-status course-status--{{ course.status }}">
+                                {{ course.status_label }}
+                            </span>
+                        </div>
+
+                        <div class="course-card__identifier">
+                            #{{ course.id }}
+                        </div>
+                    </div>
+
+                    <div class="course-card__title">
+                        <h2>{{ course.title }}</h2>
+
+                        <p>
+                            {{ course.description|default:"برای این دوره توضیحی ثبت نشده است."|truncatechars:145 }}
+                        </p>
+                    </div>
+
+                    <div class="course-instructor">
+                        <div class="course-instructor__avatar">
+                            {% if course.instructor %}
+                                {{ course.instructor.first_name|first }}{{ course.instructor.last_name|first }}
+                            {% else %}
+                                ا
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <span>استاد دوره</span>
+                            <strong>
+                                {{ course.instructor_name }}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <div class="student-card__information">
+                        <div class="student-info-row">
+                            <span class="student-info-row__label">
+                                قیمت
+                            </span>
+
+                            <strong>
+                                {{ course.formatted_price }}
+                                {% if course.price %}
+                                    تومان
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="student-info-row">
+                            <span class="student-info-row__label">
+                                ظرفیت
+                            </span>
+
+                            <strong>
+                                {{ course.capacity|default:"—" }}
+                                {% if course.capacity %}
+                                    نفر
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="student-info-row">
+                            <span class="student-info-row__label">
+                                مدت دوره
+                            </span>
+
+                            <strong>
+                                {{ course.duration_hours|default:"—" }}
+                                {% if course.duration_hours %}
+                                    ساعت
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="student-info-row">
+                            <span class="student-info-row__label">
+                                بازه برگزاری
+                            </span>
+
+                            <strong dir="ltr">
+                                {{ course.start_date_value|default:"—" }}
+                                تا
+                                {{ course.end_date_value|default:"—" }}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <footer class="student-card__actions">
+                        <a
+                            class="student-card-button student-card-button--primary"
+                            href="{% url 'course_management:detail' course.id %}"
+                        >
+                            مشاهده جزئیات
+                        </a>
+
+                        <a
+                            class="student-card-button"
+                            href="{% url 'course_management:update' course.id %}"
+                        >
+                            ویرایش
+                        </a>
+                    </footer>
+                </article>
+            {% endfor %}
+        </section>
+
+        {% if page_obj.has_other_pages %}
+            <nav
+                class="student-pagination"
+                aria-label="صفحه‌بندی دوره‌ها"
+            >
+                <div class="student-pagination__summary">
+                    صفحه
+                    <strong>{{ page_obj.number }}</strong>
+                    از
+                    <strong>{{ paginator.num_pages }}</strong>
+                </div>
+
+                <div class="student-pagination__links">
+                    {% if page_obj.has_previous %}
+                        <a href="?q={{ current_query|urlencode }}&status={{ current_status|urlencode }}&instructor={{ current_instructor|urlencode }}&page=1">
+                            ابتدا
+                        </a>
+
+                        <a href="?q={{ current_query|urlencode }}&status={{ current_status|urlencode }}&instructor={{ current_instructor|urlencode }}&page={{ page_obj.previous_page_number }}">
+                            قبلی
+                        </a>
+                    {% endif %}
+
+                    {% for page_number in paginator.page_range %}
+                        {% if page_number == page_obj.number %}
+                            <span
+                                class="active"
+                                aria-current="page"
+                            >
+                                {{ page_number }}
+                            </span>
+                        {% elif page_number >= page_obj.number|add:"-2" and page_number <= page_obj.number|add:"2" %}
+                            <a href="?q={{ current_query|urlencode }}&status={{ current_status|urlencode }}&instructor={{ current_instructor|urlencode }}&page={{ page_number }}">
+                                {{ page_number }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <a href="?q={{ current_query|urlencode }}&status={{ current_status|urlencode }}&instructor={{ current_instructor|urlencode }}&page={{ page_obj.next_page_number }}">
+                            بعدی
+                        </a>
+
+                        <a href="?q={{ current_query|urlencode }}&status={{ current_status|urlencode }}&instructor={{ current_instructor|urlencode }}&page={{ paginator.num_pages }}">
+                            انتها
+                        </a>
+                    {% endif %}
+                </div>
+            </nav>
+        {% endif %}
+
+    {% else %}
+        <section class="students-empty-state">
+            <div class="students-empty-state__illustration">
+                <span>▱</span>
+            </div>
+
+            {% if current_query or current_status or current_instructor %}
+                <h2>دوره‌ای مطابق فیلترها پیدا نشد</h2>
+
+                <p>
+                    عبارت جست‌وجو، وضعیت یا استاد انتخابی
+                    را تغییر دهید.
+                </p>
+
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'course_management:list' %}"
+                >
+                    نمایش همه دوره‌ها
+                </a>
+
+            {% elif api_error %}
+                <h2>سرویس دوره‌ها در دسترس نیست</h2>
+
+                <p>
+                    پس از بررسی Go API، صفحه را دوباره
+                    بارگذاری کنید.
+                </p>
+
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'course_management:list' %}"
+                >
+                    تلاش مجدد
+                </a>
+
+            {% else %}
+                <h2>هنوز دوره‌ای ثبت نشده است</h2>
+
+                <p>
+                    اولین دوره آموزشی را در سامانه ایجاد
+                    کنید.
+                </p>
+
+                <a
+                    class="student-primary-button"
+                    href="{% url 'course_management:create' %}"
+                >
+                    ثبت اولین دوره
+                </a>
+            {% endif %}
+        </section>
+    {% endif %}
+</section>
+{% endblock %}

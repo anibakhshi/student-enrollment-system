@@ -14,6 +14,10 @@ urlpatterns = [
     "management/instructors/",
     include("instructor_management.urls"),
 ),
+path(
+    "management/courses/",
+    include("course_management.urls"),
+),
 ]
 
 

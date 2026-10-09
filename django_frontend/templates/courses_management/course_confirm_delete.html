@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}
+    {{ page_title }}
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/courses_management/courses.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+    <nav class="student-breadcrumb" aria-label="مسیر صفحه">
+        <a href="{% url 'dashboard:index' %}">
+            داشبورد
+        </a>
+
+        <span>‹</span>
+
+        <a href="{% url 'course_management:list' %}">
+            مدیریت دوره‌ها
+        </a>
+
+        <span>‹</span>
+
+        <a href="{% url 'course_management:detail' course.id %}">
+            {{ course.title }}
+        </a>
+
+        <span>‹</span>
+        <strong>حذف دوره</strong>
+    </nav>
+
+    <section class="student-delete-layout">
+        <div class="student-delete-card">
+            <div class="student-delete-icon" aria-hidden="true">
+                !
+            </div>
+
+            <span class="student-eyebrow student-eyebrow--danger">
+                عملیات حساس
+            </span>
+
+            <h1>آیا از حذف این دوره مطمئن هستید؟</h1>
+
+            <p class="student-delete-description">
+                این عملیات دوره
+                <strong>{{ course.title }}</strong>
+                را از سامانه اصلی حذف می‌کند و ممکن است روی
+                ثبت‌نام‌ها یا سوابق مرتبط اثر بگذارد.
+            </p>
+
+            <div class="course-delete-summary">
+                <div class="course-delete-summary__header">
+                    <div class="student-detail-avatar">
+                        {{ course.code|default:"—"|slice:":2"|upper }}
+                    </div>
+
+                    <div>
+                        <strong>{{ course.title }}</strong>
+                        <span>{{ course.code|default:"بدون کد دوره" }}</span>
+                    </div>
+                </div>
+
+                <dl class="course-delete-summary__grid">
+                    <div>
+                        <dt>استاد دوره</dt>
+                        <dd>
+                            {{ course.instructor_name|default:"تعیین نشده" }}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>وضعیت</dt>
+                        <dd>{{ course.status_label|default:"نامشخص" }}</dd>
+                    </div>
+
+                    <div>
+                        <dt>شهریه</dt>
+                        <dd>
+                            {% if course.price %}
+                                {{ course.price|intcomma }} تومان
+                            {% else %}
+                                رایگان
+                            {% endif %}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>ظرفیت</dt>
+                        <dd>{{ course.capacity|default:"۰" }} نفر</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="student-delete-warning">
+                <strong>پیش از ادامه توجه کنید</strong>
+
+                <ul>
+                    <li>
+                        حذف دوره ممکن است در صورت وجود ثبت‌نام فعال
+                        توسط سرویس اصلی رد شود.
+                    </li>
+
+                    <li>
+                        بعد از تأیید موفق، امکان بازگرداندن دوره از
+                        این صفحه وجود ندارد.
+                    </li>
+
+                    <li>
+                        اگر فقط قصد توقف ثبت‌نام را دارید، بهتر است
+                        وضعیت دوره را از صفحه ویرایش تغییر دهید.
+                    </li>
+                </ul>
+            </div>
+
+            <form
+                method="post"
+                class="student-delete-form"
+                data-course-form
+            >
+                {% csrf_token %}
+
+                <div class="student-delete-actions">
+                    <a
+                        class="student-secondary-button"
+                        href="{% url 'course_management:detail' course.id %}"
+                    >
+                        انصراف و بازگشت
+                    </a>
+
+                    <button
+                        class="student-danger-button"
+                        type="submit"
+                        data-submit-button
+                    >
+                        <span data-submit-label>
+                            بله، دوره حذف شود
+                        </span>
+
+                        <span
+                            data-submit-loader
+                            hidden
+                        >
+                            در حال حذف...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/courses_management/courses.js' %}"></script>
+{% endblock %}
