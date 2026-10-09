@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "student_management",
     "instructor_management",
     "course_management",
+    "enrollment_management",
 ]
 
 

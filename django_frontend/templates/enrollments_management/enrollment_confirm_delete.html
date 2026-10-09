@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ page_title }}
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/enrollments_management/enrollments.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+    <nav class="student-breadcrumb" aria-label="مسیر صفحه">
+        <a href="{% url 'dashboard:index' %}">
+            داشبورد
+        </a>
+
+        <span>‹</span>
+
+        <a href="{% url 'enrollment_management:list' %}">
+            مدیریت ثبت‌نام‌ها
+        </a>
+
+        <span>‹</span>
+
+        <a href="{% url 'enrollment_management:detail' enrollment.id %}">
+            ثبت‌نام شماره {{ enrollment.id }}
+        </a>
+
+        <span>‹</span>
+        <strong>حذف ثبت‌نام</strong>
+    </nav>
+
+    <section class="student-delete-layout">
+        <div class="student-delete-card">
+            <div class="student-delete-icon" aria-hidden="true">
+                !
+            </div>
+
+            <span class="student-eyebrow enrollment-danger-eyebrow">
+                عملیات حساس
+            </span>
+
+            <h1>آیا از حذف این ثبت‌نام مطمئن هستید؟</h1>
+
+            <p class="student-delete-description">
+                ثبت‌نام
+                <strong>#{{ enrollment.id }}</strong>
+                مربوط به دانشجوی
+                <strong>{{ enrollment.student_name }}</strong>
+                از دوره
+                <strong>{{ enrollment.course_name }}</strong>
+                حذف خواهد شد.
+            </p>
+
+            <div class="enrollment-delete-summary">
+                <header class="enrollment-delete-summary__header">
+                    <div class="enrollment-avatar">
+                        {{ enrollment.student_name|slice:":1"|upper }}
+                    </div>
+
+                    <div>
+                        <small>دانشجو</small>
+                        <strong>{{ enrollment.student_name }}</strong>
+                        <span>{{ enrollment.course_name }}</span>
+                    </div>
+
+                    <span
+                        class="enrollment-status enrollment-status--{{ enrollment.status }}"
+                    >
+                        <i></i>
+                        {{ enrollment.status_label }}
+                    </span>
+                </header>
+
+                <dl class="enrollment-delete-summary__grid">
+                    <div>
+                        <dt>شماره ثبت‌نام</dt>
+                        <dd>#{{ enrollment.id }}</dd>
+                    </div>
+
+                    <div>
+                        <dt>تاریخ ثبت‌نام</dt>
+                        <dd>
+                            {{ enrollment.enrolled_at_date|default:"—" }}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>کد ملی دانشجو</dt>
+                        <dd>
+                            {{ enrollment.student.national_code|default:"—" }}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>کد دوره</dt>
+                        <dd>
+                            {{ enrollment.course.code|default:"—" }}
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="student-delete-warning">
+                <strong>پیش از ادامه توجه کنید</strong>
+
+                <ul>
+                    <li>
+                        حذف ثبت‌نام در سرویس اصلی به‌صورت منطقی
+                        یا soft delete انجام می‌شود.
+                    </li>
+
+                    <li>
+                        ثبت‌نام حذف‌شده دیگر در فهرست فعال نمایش
+                        داده نمی‌شود.
+                    </li>
+
+                    <li>
+                        در صورت فعال بودن ثبت‌نام، ظرفیت دوره
+                        دوباره آزاد خواهد شد.
+                    </li>
+
+                    <li>
+                        اگر فقط قصد تغییر وضعیت را دارید، از صفحه
+                        ویرایش ثبت‌نام استفاده کنید.
+                    </li>
+                </ul>
+            </div>
+
+            <form
+                method="post"
+                class="student-delete-form"
+                data-enrollment-form
+            >
+                {% csrf_token %}
+
+                <div class="student-delete-actions">
+                    <a
+                        class="student-secondary-button"
+                        href="{% url 'enrollment_management:detail' enrollment.id %}"
+                    >
+                        انصراف و بازگشت
+                    </a>
+
+                    <button
+                        class="student-danger-button"
+                        type="submit"
+                        data-submit-button
+                    >
+                        <span data-submit-label>
+                            بله، ثبت‌نام حذف شود
+                        </span>
+
+                        <span
+                            data-submit-loader
+                            hidden
+                        >
+                            در حال حذف...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    <script
+        src="{% static 'js/enrollments_management/enrollments.js' %}"
+    ></script>
+{% endblock %}

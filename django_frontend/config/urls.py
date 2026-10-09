@@ -18,6 +18,10 @@ path(
     "management/courses/",
     include("course_management.urls"),
 ),
+path(
+    "management/enrollments/",
+    include("enrollment_management.urls"),
+),
 ]
 
 

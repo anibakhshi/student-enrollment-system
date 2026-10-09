@@ -104,7 +104,7 @@
                 {% endif %}
 
                 {% if user.is_authenticated and user.profile.can_manage_education %}
-                <a class="nav-item {% if active_page == 'instructor_management' %}active{% endif %}"href="{% url 'instructor_management:list' %}">
+                <a class="nav-item {% if active_page == 'instructor_management' %}active{% endif %}" href="{% url 'instructor_management:list' %}">
                     <span class="nav-icon">◇</span>
                     <span>مدیریت استادان</span>
                 </a>
@@ -140,16 +140,17 @@
 
                 {% if user.is_authenticated and user.profile.can_manage_education %}
                     <a
-                        class="nav-item {% if active_page == 'enrollments' %}active{% endif %}"
-                        href="#"
+                        class="nav-item {% if active_page == 'enrollment_management' %}active{% endif %}"
+                        href="{% url 'enrollment_management:list' %}"
                     >
                         <span class="nav-icon">✓</span>
-                        <span>ثبت‌نام‌ها</span>
+                        <span>مدیریت ثبت‌نام‌ها</span>
                     </a>
 
                     <a
                         class="nav-item {% if active_page == 'payments' %}active{% endif %}"
                         href="#"
+                        aria-disabled="true"
                     >
                         <span class="nav-icon">₿</span>
                         <span>پرداخت‌ها</span>
