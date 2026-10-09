@@ -48,3 +48,4 @@ django_frontend/**/__pycache__/
 django_frontend/**/*.py[cod]
 # Django uploaded media
 django_frontend/media/
+dist/
