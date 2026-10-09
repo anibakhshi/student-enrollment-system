@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ page_title }}
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/instructors_management/instructors.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+<section class="students-page">
+    <nav class="student-breadcrumb">
+        <a href="{% url 'instructor_management:list' %}">
+            مدیریت استادان
+        </a>
+
+        <span>←</span>
+        <strong>{{ page_title }}</strong>
+    </nav>
+
+    <header class="student-form-hero">
+        <div>
+            <span class="students-eyebrow">
+                {% if form_mode == "create" %}
+                    ایجاد پرونده آموزشی جدید
+                {% else %}
+                    ویرایش اطلاعات پرونده
+                {% endif %}
+            </span>
+
+            <h1>{{ page_title }}</h1>
+
+            <p>
+                {% if form_mode == "create" %}
+                    اطلاعات هویتی، ارتباطی و تخصصی استاد
+                    را با دقت وارد کنید.
+                {% else %}
+                    اطلاعات استاد را بررسی کرده و تغییرات
+                    لازم را ذخیره کنید.
+                {% endif %}
+            </p>
+        </div>
+
+        {% if instructor %}
+            <div class="student-form-person">
+                <div class="student-avatar">
+                    <span>{{ instructor.initials }}</span>
+                </div>
+
+                <div>
+                    <strong>{{ instructor.full_name }}</strong>
+                    <span>
+                        شناسه استاد: {{ instructor.id }}
+                    </span>
+                </div>
+            </div>
+        {% endif %}
+    </header>
+
+    <form
+        class="student-form"
+        method="post"
+        novalidate
+        data-instructor-form
+    >
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <section
+                class="student-form-errors"
+                role="alert"
+            >
+                <strong>
+                    ذخیره اطلاعات استاد انجام نشد
+                </strong>
+
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </section>
+        {% endif %}
+
+        <section class="student-form-panel">
+            <div class="student-section-heading">
+                <div>
+                    <span>اطلاعات هویتی</span>
+                    <h2>نام و مشخصات اصلی استاد</h2>
+                </div>
+
+                <span class="student-section-icon">◎</span>
+            </div>
+
+            <div class="student-form-grid">
+                {% include "instructors_management/partials/form_field.html" with field=form.first_name %}
+
+                {% include "instructors_management/partials/form_field.html" with field=form.last_name %}
+            </div>
+        </section>
+
+        <section class="student-form-panel">
+            <div class="student-section-heading">
+                <div>
+                    <span>اطلاعات ارتباطی</span>
+                    <h2>راه‌های تماس با استاد</h2>
+                </div>
+
+                <span class="student-section-icon">◇</span>
+            </div>
+
+            <div class="student-form-grid">
+                {% include "instructors_management/partials/form_field.html" with field=form.email %}
+
+                {% include "instructors_management/partials/form_field.html" with field=form.phone %}
+            </div>
+        </section>
+
+        <section class="student-form-panel">
+            <div class="student-section-heading">
+                <div>
+                    <span>اطلاعات حرفه‌ای</span>
+                    <h2>تخصص و معرفی استاد</h2>
+                </div>
+
+                <span class="student-section-icon">▱</span>
+            </div>
+
+            <div class="student-form-grid">
+                <div class="student-form-field--full">
+                    {% include "instructors_management/partials/form_field.html" with field=form.expertise %}
+                </div>
+
+                <div class="student-form-field--full">
+                    {% include "instructors_management/partials/form_field.html" with field=form.bio %}
+                </div>
+
+                {% if form.status %}
+                    <div class="student-form-field--full">
+                        {% include "instructors_management/partials/form_field.html" with field=form.status %}
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <footer class="student-form-actions">
+            <a
+                class="student-secondary-button"
+                href="{% if instructor %}{% url 'instructor_management:detail' instructor.id %}{% else %}{% url 'instructor_management:list' %}{% endif %}"
+            >
+                انصراف
+            </a>
+
+            <button
+                class="student-primary-button"
+                type="submit"
+                data-submit-button
+            >
+                <span class="button-icon">✓</span>
+                <span>{{ submit_label }}</span>
+            </button>
+        </footer>
+    </form>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/instructors_management/instructors.js' %}"></script>
+{% endblock %}

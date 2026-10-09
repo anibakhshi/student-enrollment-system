@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}حساب کاربری{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/accounts/auth.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+<section class="profile-page">
+    <header class="profile-hero">
+        <div class="profile-hero__identity">
+            <div class="profile-avatar-large">
+                {% if user.profile.avatar %}
+                    <img
+                        src="{{ user.profile.avatar.url }}"
+                        alt="{{ user.profile.display_name }}"
+                    >
+                {% else %}
+                    <span>
+                        {{ user.first_name|first|default:user.username|first }}
+                        {{ user.last_name|first }}
+                    </span>
+                {% endif %}
+            </div>
+
+            <div>
+                <span class="profile-overline">حساب کاربری فعال</span>
+                <h1>{{ user.profile.display_name }}</h1>
+
+                <div class="profile-badges">
+                    <span class="profile-role">
+                        {{ user.profile.get_role_display }}
+                    </span>
+
+                    {% if user.profile.is_verified %}
+                        <span class="profile-verified">✓ تأیید شده</span>
+                    {% else %}
+                        <span class="profile-pending">در انتظار تأیید</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <form
+            method="post"
+            action="{% url 'accounts:logout' %}"
+        >
+            {% csrf_token %}
+
+            <button class="profile-logout" type="submit">
+                خروج از حساب
+            </button>
+        </form>
+    </header>
+
+    <div class="profile-grid">
+        <article class="profile-card profile-card--details">
+            <header>
+                <div>
+                    <span>اطلاعات حساب</span>
+                    <h2>مشخصات کاربری</h2>
+                </div>
+
+                <span class="profile-card__icon">◎</span>
+            </header>
+
+            <dl class="profile-details">
+                <div>
+                    <dt>نام و نام خانوادگی</dt>
+                    <dd>{{ user.profile.display_name }}</dd>
+                </div>
+
+                <div>
+                    <dt>نام کاربری</dt>
+                    <dd dir="ltr">{{ user.username }}</dd>
+                </div>
+
+                <div>
+                    <dt>ایمیل</dt>
+                    <dd dir="ltr">
+                        {{ user.email|default:"ثبت نشده" }}
+                    </dd>
+                </div>
+
+                <div>
+                    <dt>شماره تماس</dt>
+                    <dd dir="ltr">
+                        {{ user.profile.phone|default:"ثبت نشده" }}
+                    </dd>
+                </div>
+
+                <div>
+                    <dt>کد ملی</dt>
+                    <dd dir="ltr">
+                        {{ user.profile.national_code|default:"ثبت نشده" }}
+                    </dd>
+                </div>
+
+                <div>
+                    <dt>تاریخ عضویت</dt>
+                    <dd>{{ user.date_joined|date:"Y/m/d" }}</dd>
+                </div>
+            </dl>
+        </article>
+
+        <aside class="profile-card profile-card--access">
+            <header>
+                <div>
+                    <span>سطح دسترسی</span>
+                    <h2>{{ user.profile.get_role_display }}</h2>
+                </div>
+
+                <span class="profile-card__icon">◆</span>
+            </header>
+
+            <ul class="access-list">
+                <li>
+                    <span>✓</span>
+                    مشاهده داشبورد
+                </li>
+
+                <li>
+                    <span>✓</span>
+                    مشاهده دوره‌ها و استادان
+                </li>
+
+                {% if user.profile.can_manage_education %}
+                    <li>
+                        <span>✓</span>
+                        مدیریت عملیات آموزشی
+                    </li>
+
+                    <li>
+                        <span>✓</span>
+                        مدیریت ثبت‌نام و پرداخت
+                    </li>
+                {% else %}
+                    <li class="muted">
+                        <span>–</span>
+                        دسترسی مدیریتی محدود است
+                    </li>
+                {% endif %}
+            </ul>
+
+            <a
+                class="profile-dashboard-link"
+                href="{% url 'dashboard:index' %}"
+            >
+                بازگشت به داشبورد
+                <span>←</span>
+            </a>
+        </aside>
+    </div>
+</section>
+{% endblock %}

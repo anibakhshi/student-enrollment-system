@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ page_title }}
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/enrollments_management/enrollments.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+    <nav class="student-breadcrumb" aria-label="مسیر صفحه">
+        <a href="{% url 'dashboard:index' %}">
+            داشبورد
+        </a>
+
+        <span>‹</span>
+
+        <a href="{% url 'enrollment_management:list' %}">
+            مدیریت ثبت‌نام‌ها
+        </a>
+
+        <span>‹</span>
+
+        <strong>{{ page_title }}</strong>
+    </nav>
+
+    <section class="student-form-hero">
+        <div>
+            <span class="student-eyebrow">
+                {% if form_mode == "update" %}
+                    مدیریت چرخه آموزشی
+                {% else %}
+                    ثبت دانشجو در دوره
+                {% endif %}
+            </span>
+
+            <h1>{{ page_title }}</h1>
+
+            <p>
+                {% if form_mode == "update" %}
+                    وضعیت ثبت‌نام و یادداشت‌های آموزشی را براساس
+                    چرخه مجاز سامانه تغییر دهید.
+                {% else %}
+                    دانشجو و دوره آموزشی را انتخاب کنید تا درخواست
+                    ثبت‌نام با وضعیت «در انتظار تأیید» ایجاد شود.
+                {% endif %}
+            </p>
+        </div>
+
+        <a
+            class="student-secondary-button"
+            href="{% url 'enrollment_management:list' %}"
+        >
+            بازگشت به فهرست
+        </a>
+    </section>
+
+    {% if api_error %}
+        <section class="alert alert--danger">
+            <strong>امکان دریافت اطلاعات کامل وجود ندارد</strong>
+            <span>{{ api_error }}</span>
+        </section>
+    {% endif %}
+
+    {% if form.non_field_errors %}
+        <section class="alert alert--danger">
+            <strong>اطلاعات فرم نیاز به اصلاح دارد</strong>
+
+            {% for error in form.non_field_errors %}
+                <span>{{ error }}</span>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    {% if form_mode == "update" and enrollment %}
+        <section class="enrollment-form-summary">
+            <div class="enrollment-avatar">
+                {{ enrollment.student_name|slice:":1"|upper }}
+            </div>
+
+            <div class="enrollment-form-summary__identity">
+                <small>دانشجو</small>
+                <strong>{{ enrollment.student_name }}</strong>
+                <span>{{ enrollment.course_name }}</span>
+            </div>
+
+            <span
+                class="enrollment-status enrollment-status--{{ enrollment.status }}"
+            >
+                <i></i>
+                {{ enrollment.status_label }}
+            </span>
+        </section>
+    {% endif %}
+
+    {% if form_mode == "update" and enrollment.is_terminal %}
+        <section class="enrollment-terminal-warning">
+            <span>!</span>
+
+            <div>
+                <strong>این ثبت‌نام نهایی شده است</strong>
+
+                <p>
+                    ثبت‌نام‌های تکمیل‌شده یا لغوشده مطابق قوانین
+                    سرویس اصلی قابل ویرایش نیستند.
+                </p>
+            </div>
+        </section>
+    {% endif %}
+
+    <form
+        method="post"
+        class="student-form"
+        novalidate
+        data-enrollment-form
+    >
+        {% csrf_token %}
+
+        {% if form_mode == "create" %}
+            <section class="student-form-section">
+                <header class="student-form-section__header">
+                    <div>
+                        <span class="student-form-section__icon">◉</span>
+
+                        <div>
+                            <h2>انتخاب دانشجو</h2>
+
+                            <p>
+                                دانشجویی را که قصد شرکت در دوره دارد
+                                انتخاب کنید.
+                            </p>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="student-form-grid">
+                    <div class="student-form-field--full">
+                        {% include "enrollments_management/partials/form_field.html" with field=form.student_id %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="student-form-section">
+                <header class="student-form-section__header">
+                    <div>
+                        <span class="student-form-section__icon">▱</span>
+
+                        <div>
+                            <h2>انتخاب دوره آموزشی</h2>
+
+                            <p>
+                                فقط دوره‌هایی که برای ثبت‌نام باز هستند
+                                در این فهرست نمایش داده می‌شوند.
+                            </p>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="student-form-grid">
+                    <div class="student-form-field--full">
+                        {% include "enrollments_management/partials/form_field.html" with field=form.course_id %}
+                    </div>
+                </div>
+
+                <div class="enrollment-form-note">
+                    <span>ℹ</span>
+
+                    <p>
+                        سرویس اصلی ظرفیت دوره، تکراری نبودن ثبت‌نام
+                        و شروع‌نشدن دوره را دوباره بررسی می‌کند.
+                    </p>
+                </div>
+            </section>
+        {% else %}
+            <section class="student-form-section">
+                <header class="student-form-section__header">
+                    <div>
+                        <span class="student-form-section__icon">↻</span>
+
+                        <div>
+                            <h2>تغییر وضعیت ثبت‌نام</h2>
+
+                            <p>
+                                فقط انتقال‌های مجاز چرخه ثبت‌نام قابل
+                                انتخاب هستند.
+                            </p>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="student-form-grid">
+                    <div class="student-form-field--full">
+                        {% include "enrollments_management/partials/form_field.html" with field=form.status %}
+                    </div>
+                </div>
+
+                {% if enrollment.status == "pending" %}
+                    <div class="enrollment-transition-guide">
+                        <span>در انتظار تأیید</span>
+                        <i>←</i>
+                        <strong>تأیید یا لغو</strong>
+                    </div>
+                {% elif enrollment.status == "confirmed" %}
+                    <div class="enrollment-transition-guide">
+                        <span>تأییدشده</span>
+                        <i>←</i>
+                        <strong>تکمیل یا لغو</strong>
+                    </div>
+                {% endif %}
+            </section>
+        {% endif %}
+
+        <section class="student-form-section">
+            <header class="student-form-section__header">
+                <div>
+                    <span class="student-form-section__icon">✎</span>
+
+                    <div>
+                        <h2>یادداشت ثبت‌نام</h2>
+
+                        <p>
+                            توضیحات تکمیلی مرتبط با درخواست یا وضعیت
+                            آموزشی را ثبت کنید.
+                        </p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="student-form-grid">
+                <div class="student-form-field--full">
+                    {% include "enrollments_management/partials/form_field.html" with field=form.notes %}
+                </div>
+            </div>
+        </section>
+
+        <footer class="student-form-actions">
+            {% if form_mode == "update" and enrollment %}
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'enrollment_management:detail' enrollment.id %}"
+                >
+                    انصراف
+                </a>
+            {% else %}
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'enrollment_management:list' %}"
+                >
+                    انصراف
+                </a>
+            {% endif %}
+
+            <button
+                class="student-primary-button"
+                type="submit"
+                data-submit-button
+                {% if form_mode == "update" and enrollment.is_terminal %}
+                    disabled
+                {% endif %}
+            >
+                <span data-submit-label>
+                    {% if form_mode == "update" %}
+                        ذخیره تغییرات
+                    {% else %}
+                        ثبت دانشجو در دوره
+                    {% endif %}
+                </span>
+
+                <span
+                    data-submit-loader
+                    hidden
+                >
+                    در حال پردازش...
+                </span>
+            </button>
+        </footer>
+    </form>
+{% endblock %}
+
+{% block extra_js %}
+    <script
+        src="{% static 'js/enrollments_management/enrollments.js' %}"
+    ></script>
+{% endblock %}

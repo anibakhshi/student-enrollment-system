@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    مدیریت دانشجویان
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/students/students.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+<section class="students-page">
+    <header class="students-hero">
+        <div class="students-hero__content">
+            <span class="students-eyebrow">
+                مدیریت یکپارچه کاربران آموزشی
+            </span>
+
+            <h1>مدیریت دانشجویان</h1>
+
+            <p>
+                اطلاعات دانشجویان را مشاهده، جست‌وجو،
+                ثبت و به‌روزرسانی کنید. تمام تغییرات
+                مستقیماً در سرویس اصلی Go ذخیره می‌شوند.
+            </p>
+
+            <div class="students-hero__stats">
+                <div class="students-mini-stat">
+                    <strong>{{ total_students }}</strong>
+                    <span>
+                        {% if current_query %}
+                            نتیجه پیدا شده
+                        {% else %}
+                            دانشجوی ثبت‌شده
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="students-mini-stat">
+                    <strong>
+                        {% if api_available %}
+                            فعال
+                        {% else %}
+                            قطع
+                        {% endif %}
+                    </strong>
+
+                    <span>وضعیت سرویس اصلی</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="students-hero__actions">
+            <a
+                class="student-primary-button"
+                href="{% url 'students:create' %}"
+            >
+                <span class="button-icon">＋</span>
+                <span>ثبت دانشجوی جدید</span>
+            </a>
+        </div>
+    </header>
+
+    {% if api_error %}
+        <section class="student-api-error" role="alert">
+            <div class="student-api-error__icon">!</div>
+
+            <div>
+                <strong>
+                    دریافت اطلاعات دانشجویان ممکن نشد
+                </strong>
+
+                <p>{{ api_error }}</p>
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="students-toolbar">
+        <form
+            class="student-search-form"
+            method="get"
+            action="{% url 'students:list' %}"
+        >
+            <div class="student-search-box">
+                <span class="student-search-icon">⌕</span>
+
+                {{ search_form.q }}
+
+                {% if current_query %}
+                    <a
+                        class="student-search-clear"
+                        href="{% url 'students:list' %}"
+                        aria-label="پاک‌کردن جست‌وجو"
+                        title="پاک‌کردن جست‌وجو"
+                    >
+                        ×
+                    </a>
+                {% endif %}
+            </div>
+
+            <button
+                class="student-secondary-button"
+                type="submit"
+            >
+                جست‌وجو
+            </button>
+        </form>
+
+        <div class="students-toolbar__meta">
+            {% if current_query %}
+                <span>
+                    نتیجه جست‌وجوی
+                    <strong>«{{ current_query }}»</strong>
+                </span>
+            {% else %}
+                <span>
+                    آخرین اطلاعات ثبت‌شده در سامانه
+                </span>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if students %}
+        <section class="students-grid">
+            {% for student in students %}
+                <article class="student-card">
+                    <div class="student-card__top">
+                        <div class="student-avatar">
+                            {% if student.profile_image_url %}
+                                <img
+                                    src="{{ student.profile_image_url }}"
+                                    alt="تصویر {{ student.full_name }}"
+                                    loading="lazy"
+                                >
+                            {% else %}
+                                <span>{{ student.initials }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="student-card__identity">
+                            <span class="student-id">
+                                شناسه دانشجو:
+                                {{ student.id }}
+                            </span>
+
+                            <h2>{{ student.full_name }}</h2>
+
+                            <span class="student-status">
+                                <span></span>
+                                پرونده فعال
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="student-card__information">
+                        <div class="student-info-row">
+                            <span class="student-info-row__label">
+                                کد ملی
+                            </span>
+
+                            <strong dir="ltr">
+                                {{ student.national_code|default:"—" }}
+                            </strong>
+                        </div>
+
+                        <div class="student-info-row">
+                            <span class="student-info-row__label">
+                                سن
+                            </span>
+
+                            <strong>
+                                {{ student.age|default:"—" }}
+                                {% if student.age %}
+                                    سال
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="student-info-row">
+                            <span class="student-info-row__label">
+                                موبایل
+                            </span>
+
+                            <strong dir="ltr">
+                                {{ student.phone|default:"—" }}
+                            </strong>
+                        </div>
+
+                        <div class="student-info-row student-info-row--email">
+                            <span class="student-info-row__label">
+                                ایمیل
+                            </span>
+
+                            <strong dir="ltr">
+                                {{ student.email|default:"—" }}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <footer class="student-card__actions">
+                        <a
+                            class="student-card-button student-card-button--primary"
+                            href="{% url 'students:detail' student.id %}"
+                        >
+                            مشاهده پرونده
+                        </a>
+
+                        <a
+                            class="student-card-button"
+                            href="{% url 'students:update' student.id %}"
+                        >
+                            ویرایش
+                        </a>
+                    </footer>
+                </article>
+            {% endfor %}
+        </section>
+
+        {% if page_obj.has_other_pages %}
+            <nav
+                class="student-pagination"
+                aria-label="صفحه‌بندی دانشجویان"
+            >
+                <div class="student-pagination__summary">
+                    صفحه
+                    <strong>{{ page_obj.number }}</strong>
+                    از
+                    <strong>{{ paginator.num_pages }}</strong>
+                </div>
+
+                <div class="student-pagination__links">
+                    {% if page_obj.has_previous %}
+                        <a
+                            href="?q={{ current_query|urlencode }}&page=1"
+                            aria-label="صفحه اول"
+                        >
+                            ابتدا
+                        </a>
+
+                        <a
+                            href="?q={{ current_query|urlencode }}&page={{ page_obj.previous_page_number }}"
+                        >
+                            قبلی
+                        </a>
+                    {% endif %}
+
+                    {% for page_number in paginator.page_range %}
+                        {% if page_number == page_obj.number %}
+                            <span
+                                class="active"
+                                aria-current="page"
+                            >
+                                {{ page_number }}
+                            </span>
+                        {% elif page_number >= page_obj.number|add:"-2" and page_number <= page_obj.number|add:"2" %}
+                            <a
+                                href="?q={{ current_query|urlencode }}&page={{ page_number }}"
+                            >
+                                {{ page_number }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <a
+                            href="?q={{ current_query|urlencode }}&page={{ page_obj.next_page_number }}"
+                        >
+                            بعدی
+                        </a>
+
+                        <a
+                            href="?q={{ current_query|urlencode }}&page={{ paginator.num_pages }}"
+                            aria-label="صفحه آخر"
+                        >
+                            انتها
+                        </a>
+                    {% endif %}
+                </div>
+            </nav>
+        {% endif %}
+    {% else %}
+        <section class="students-empty-state">
+            <div class="students-empty-state__illustration">
+                <span>◎</span>
+            </div>
+
+            {% if current_query %}
+                <h2>دانشجویی با این مشخصات پیدا نشد</h2>
+
+                <p>
+                    عبارت جست‌وجو را تغییر دهید یا همه
+                    دانشجویان را دوباره نمایش دهید.
+                </p>
+
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'students:list' %}"
+                >
+                    نمایش همه دانشجویان
+                </a>
+            {% elif api_error %}
+                <h2>سرویس دانشجویان در دسترس نیست</h2>
+
+                <p>
+                    پس از اطمینان از فعال‌بودن Go API،
+                    صفحه را دوباره بارگذاری کنید.
+                </p>
+
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'students:list' %}"
+                >
+                    تلاش مجدد
+                </a>
+            {% else %}
+                <h2>هنوز دانشجویی ثبت نشده است</h2>
+
+                <p>
+                    برای ایجاد اولین پرونده دانشجویی،
+                    از گزینه ثبت دانشجوی جدید استفاده کنید.
+                </p>
+
+                <a
+                    class="student-primary-button"
+                    href="{% url 'students:create' %}"
+                >
+                    ثبت اولین دانشجو
+                </a>
+            {% endif %}
+        </section>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/students/students.js' %}"></script>
+{% endblock %}

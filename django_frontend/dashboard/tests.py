@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
@@ -9,6 +10,32 @@ from .api_client import GoAPIError
 class DashboardViewTests(TestCase):
     def setUp(self):
         self.url = reverse("dashboard:index")
+
+        self.user = get_user_model().objects.create_user(
+            username="dashboard-admin",
+            password="StrongPassword123!",
+            first_name="آنیتا",
+            last_name="بخشی",
+            is_staff=True,
+        )
+
+        self.client.force_login(self.user)
+
+    def test_dashboard_requires_authentication(self):
+        self.client.logout()
+
+        response = self.client.get(self.url)
+
+        expected_url = (
+            f"{reverse('accounts:login')}"
+            f"?next={self.url}"
+        )
+
+        self.assertRedirects(
+            response,
+            expected_url,
+            fetch_redirect_response=False,
+        )
 
     @patch("dashboard.views.go_api.get")
     def test_dashboard_displays_api_data(

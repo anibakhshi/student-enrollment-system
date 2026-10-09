@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}
+    {{ page_title }}
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/enrollments_management/enrollments.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+    <nav class="student-breadcrumb" aria-label="مسیر صفحه">
+        <a href="{% url 'dashboard:index' %}">داشبورد</a>
+        <span>‹</span>
+
+        <a href="{% url 'enrollment_management:list' %}">
+            مدیریت ثبت‌نام‌ها
+        </a>
+
+        <span>‹</span>
+
+        <strong>
+            ثبت‌نام شماره {{ enrollment.id }}
+        </strong>
+    </nav>
+
+    {% if enrollment %}
+        <section class="enrollment-detail-hero">
+            <div class="enrollment-detail-identity">
+                <div class="enrollment-detail-number">
+                    <span>شماره ثبت‌نام</span>
+                    <strong>#{{ enrollment.id }}</strong>
+                </div>
+
+                <div>
+                    <span
+                        class="enrollment-status enrollment-status--{{ enrollment.status }}"
+                    >
+                        <i></i>
+                        {{ enrollment.status_label }}
+                    </span>
+
+                    <h1>{{ enrollment.student_name }}</h1>
+
+                    <p>
+                        ثبت‌نام در دوره
+                        <strong>{{ enrollment.course_name }}</strong>
+                    </p>
+                </div>
+            </div>
+
+            <div class="student-detail-actions">
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'enrollment_management:list' %}"
+                >
+                    بازگشت
+                </a>
+
+                {% if not enrollment.is_terminal %}
+                    <a
+                        class="student-primary-button"
+                        href="{% url 'enrollment_management:update' enrollment.id %}"
+                    >
+                        تغییر وضعیت
+                    </a>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="enrollment-lifecycle">
+            <header>
+                <div>
+                    <span class="student-detail-panel__icon">↻</span>
+
+                    <div>
+                        <h2>چرخه وضعیت ثبت‌نام</h2>
+                        <p>موقعیت فعلی ثبت‌نام در فرایند آموزشی</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="enrollment-lifecycle__track">
+                <article class="enrollment-lifecycle__step is-complete">
+                    <span>1</span>
+                    <div>
+                        <strong>ثبت اولیه</strong>
+                        <small>
+                            {{ enrollment.enrolled_at_date|default:"—" }}
+                        </small>
+                    </div>
+                </article>
+
+                <div
+                    class="enrollment-lifecycle__line {% if enrollment.status != 'pending' %}is-complete{% endif %}"
+                ></div>
+
+                <article
+                    class="enrollment-lifecycle__step {% if enrollment.status == 'confirmed' or enrollment.status == 'completed' %}is-complete{% elif enrollment.status == 'cancelled' %}is-cancelled{% endif %}"
+                >
+                    <span>2</span>
+
+                    <div>
+                        {% if enrollment.status == "cancelled" %}
+                            <strong>لغوشده</strong>
+                            <small>
+                                {{ enrollment.cancelled_at_date|default:"—" }}
+                            </small>
+                        {% else %}
+                            <strong>تأیید ثبت‌نام</strong>
+                            <small>
+                                {{ enrollment.confirmed_at_date|default:"در انتظار" }}
+                            </small>
+                        {% endif %}
+                    </div>
+                </article>
+
+                <div
+                    class="enrollment-lifecycle__line {% if enrollment.status == 'completed' %}is-complete{% endif %}"
+                ></div>
+
+                <article
+                    class="enrollment-lifecycle__step {% if enrollment.status == 'completed' %}is-complete{% endif %}"
+                >
+                    <span>3</span>
+
+                    <div>
+                        <strong>تکمیل دوره</strong>
+                        <small>
+                            {{ enrollment.completed_at_date|default:"انجام نشده" }}
+                        </small>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <div class="student-detail-layout">
+            <div class="student-detail-main">
+                <section class="student-detail-panel">
+                    <header class="student-detail-panel__header">
+                        <div>
+                            <span class="student-detail-panel__icon">◉</span>
+
+                            <div>
+                                <h2>اطلاعات دانشجو</h2>
+                                <p>مشخصات دانشجوی ثبت‌نام‌شده</p>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="student-information-grid">
+                        <article class="student-information-item">
+                            <span>نام و نام خانوادگی</span>
+                            <strong>
+                                {{ enrollment.student_name }}
+                            </strong>
+                        </article>
+
+                        <article class="student-information-item">
+                            <span>کد ملی</span>
+                            <strong>
+                                {{ enrollment.student.national_code|default:"—" }}
+                            </strong>
+                        </article>
+
+                        <article class="student-information-item">
+                            <span>ایمیل</span>
+                            <strong>
+                                {{ enrollment.student.email|default:"—" }}
+                            </strong>
+                        </article>
+
+                        <article class="student-information-item">
+                            <span>شماره تماس</span>
+                            <strong>
+                                {{ enrollment.student.phone|default:"—" }}
+                            </strong>
+                        </article>
+                    </div>
+                </section>
+
+                <section class="student-detail-panel">
+                    <header class="student-detail-panel__header">
+                        <div>
+                            <span class="student-detail-panel__icon">▱</span>
+
+                            <div>
+                                <h2>اطلاعات دوره</h2>
+                                <p>مشخصات دوره آموزشی مرتبط</p>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="student-information-grid">
+                        <article class="student-information-item">
+                            <span>عنوان دوره</span>
+                            <strong>
+                                {{ enrollment.course.title|default:enrollment.course_name }}
+                            </strong>
+                        </article>
+
+                        <article class="student-information-item">
+                            <span>کد دوره</span>
+                            <strong>
+                                {{ enrollment.course.code|default:"—" }}
+                            </strong>
+                        </article>
+
+                        <article class="student-information-item">
+                            <span>مدت دوره</span>
+                            <strong>
+                                {{ enrollment.course.duration_hours|default:"۰" }}
+                                ساعت
+                            </strong>
+                        </article>
+
+                        <article class="student-information-item">
+                            <span>شهریه</span>
+                            <strong>
+                                {% if enrollment.course.price %}
+                                    {{ enrollment.course.price|intcomma }}
+                                    تومان
+                                {% else %}
+                                    رایگان
+                                {% endif %}
+                            </strong>
+                        </article>
+                    </div>
+                </section>
+
+                <section class="student-detail-panel">
+                    <header class="student-detail-panel__header">
+                        <div>
+                            <span class="student-detail-panel__icon">✎</span>
+
+                            <div>
+                                <h2>یادداشت ثبت‌نام</h2>
+                                <p>توضیحات ثبت‌شده برای این درخواست</p>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="enrollment-notes">
+                        {% if enrollment.notes %}
+                            {{ enrollment.notes|linebreaks }}
+                        {% else %}
+                            <span>
+                                یادداشتی برای این ثبت‌نام وارد نشده است.
+                            </span>
+                        {% endif %}
+                    </div>
+                </section>
+            </div>
+
+            <aside class="student-detail-sidebar">
+                <section class="student-detail-panel">
+                    <header class="student-detail-panel__header">
+                        <div>
+                            <span class="student-detail-panel__icon">◷</span>
+
+                            <div>
+                                <h2>زمان‌بندی</h2>
+                                <p>تاریخ رویدادهای ثبت‌نام</p>
+                            </div>
+                        </div>
+                    </header>
+
+                    <dl class="enrollment-dates">
+                        <div>
+                            <dt>تاریخ ثبت‌نام</dt>
+                            <dd>
+                                {{ enrollment.enrolled_at_date|default:"—" }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>تاریخ تأیید</dt>
+                            <dd>
+                                {{ enrollment.confirmed_at_date|default:"—" }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>تاریخ لغو</dt>
+                            <dd>
+                                {{ enrollment.cancelled_at_date|default:"—" }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>تاریخ تکمیل</dt>
+                            <dd>
+                                {{ enrollment.completed_at_date|default:"—" }}
+                            </dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <section class="student-detail-panel enrollment-danger-panel">
+                    <h2>عملیات مدیریتی</h2>
+
+                    <p>
+                        حذف ثبت‌نام به‌صورت منطقی انجام می‌شود و ممکن است
+                        بر ظرفیت دوره اثر بگذارد.
+                    </p>
+
+                    <a
+                        class="student-danger-button"
+                        href="{% url 'enrollment_management:delete' enrollment.id %}"
+                    >
+                        حذف ثبت‌نام
+                    </a>
+                </section>
+            </aside>
+        </div>
+    {% else %}
+        <section class="alert alert--danger">
+            <strong>اطلاعات ثبت‌نام دریافت نشد</strong>
+            <span>{{ api_error }}</span>
+        </section>
+    {% endif %}
+{% endblock %}

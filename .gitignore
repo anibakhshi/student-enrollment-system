@@ -46,3 +46,5 @@ django_frontend/db.sqlite3
 django_frontend/staticfiles/
 django_frontend/**/__pycache__/
 django_frontend/**/*.py[cod]
+# Django uploaded media
+django_frontend/media/

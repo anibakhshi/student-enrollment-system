@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}
+    {{ page_title }}
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/courses_management/courses.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+    <nav class="student-breadcrumb" aria-label="مسیر صفحه">
+        <a href="{% url 'dashboard:index' %}">داشبورد</a>
+        <span>‹</span>
+
+        <a href="{% url 'course_management:list' %}">
+            مدیریت دوره‌ها
+        </a>
+
+        <span>‹</span>
+        <strong>{{ course.title }}</strong>
+    </nav>
+
+    <section class="student-detail-hero course-detail-hero">
+        <div class="student-detail-identity">
+            <div class="student-detail-avatar">
+                {{ course.code|default:"—"|slice:":2"|upper }}
+            </div>
+
+            <div>
+                <div class="student-detail-heading">
+                    <span class="course-code">
+                        {{ course.code|default:"بدون کد" }}
+                    </span>
+
+                    <span class="course-status course-status--{{ course.status }}">
+                        {{ course.status_label }}
+                    </span>
+                </div>
+
+                <h1>{{ course.title }}</h1>
+
+                <p>
+                    {% if course.instructor_name %}
+                        مدرس دوره: {{ course.instructor_name }}
+                    {% else %}
+                        مدرس این دوره مشخص نشده است.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="student-detail-actions">
+            <a
+                class="student-secondary-button"
+                href="{% url 'course_management:list' %}"
+            >
+                بازگشت
+            </a>
+
+            <a
+                class="student-primary-button"
+                href="{% url 'course_management:update' course.id %}"
+            >
+                ویرایش دوره
+            </a>
+        </div>
+    </section>
+
+    <div class="student-detail-layout">
+        <div class="student-detail-main">
+            <section class="student-detail-panel">
+                <header class="student-detail-panel__header">
+                    <div>
+                        <span class="student-detail-panel__icon">▱</span>
+
+                        <div>
+                            <h2>مشخصات دوره</h2>
+                            <p>اطلاعات اصلی و آموزشی دوره</p>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="student-information-grid">
+                    <article class="student-information-item">
+                        <span>کد دوره</span>
+                        <strong>{{ course.code|default:"—" }}</strong>
+                    </article>
+
+                    <article class="student-information-item">
+                        <span>استاد دوره</span>
+                        <strong>
+                            {{ course.instructor_name|default:"تعیین نشده" }}
+                        </strong>
+                    </article>
+
+                    <article class="student-information-item">
+                        <span>مدت آموزش</span>
+                        <strong>
+                            {{ course.duration_hours|default:"۰" }}
+                            ساعت
+                        </strong>
+                    </article>
+
+                    <article class="student-information-item">
+                        <span>ظرفیت دوره</span>
+                        <strong>
+                            {{ course.capacity|default:"۰" }}
+                            نفر
+                        </strong>
+                    </article>
+                </div>
+            </section>
+
+            <section class="student-detail-panel">
+                <header class="student-detail-panel__header">
+                    <div>
+                        <span class="student-detail-panel__icon">✎</span>
+
+                        <div>
+                            <h2>توضیحات دوره</h2>
+                            <p>معرفی، اهداف و محتوای آموزشی</p>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="course-description">
+                    {% if course.description %}
+                        {{ course.description|linebreaks }}
+                    {% else %}
+                        <div class="course-empty-description">
+                            توضیحی برای این دوره ثبت نشده است.
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+
+        <aside class="student-detail-sidebar">
+            <section class="student-detail-panel">
+                <header class="student-detail-panel__header">
+                    <div>
+                        <span class="student-detail-panel__icon">◈</span>
+
+                        <div>
+                            <h2>اطلاعات مالی</h2>
+                            <p>شهریه و ظرفیت ثبت‌نام</p>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="course-price-box">
+                    <span>شهریه دوره</span>
+
+                    <strong>
+                        {% if course.price %}
+                            {{ course.price|intcomma }}
+                            <small>تومان</small>
+                        {% else %}
+                            رایگان
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div class="course-side-stat">
+                    <span>ظرفیت کل</span>
+                    <strong>{{ course.capacity|default:"۰" }} نفر</strong>
+                </div>
+            </section>
+
+            <section class="student-detail-panel">
+                <header class="student-detail-panel__header">
+                    <div>
+                        <span class="student-detail-panel__icon">◷</span>
+
+                        <div>
+                            <h2>زمان‌بندی</h2>
+                            <p>بازه برگزاری دوره</p>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="course-timeline">
+                    <div class="course-timeline__item">
+                        <span class="course-timeline__dot"></span>
+
+                        <div>
+                            <small>تاریخ شروع</small>
+                            <strong>
+                                {{ course.start_date_display|default:course.start_date|default:"—" }}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <div class="course-timeline__line"></div>
+
+                    <div class="course-timeline__item">
+                        <span class="course-timeline__dot"></span>
+
+                        <div>
+                            <small>تاریخ پایان</small>
+                            <strong>
+                                {{ course.end_date_display|default:course.end_date|default:"—" }}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="student-detail-panel course-danger-panel">
+                <h2>عملیات مدیریتی</h2>
+
+                <p>
+                    حذف دوره ممکن است روی ثبت‌نام‌های مرتبط اثر بگذارد.
+                </p>
+
+                <a
+                    class="student-danger-button"
+                    href="{% url 'course_management:delete' course.id %}"
+                >
+                    حذف دوره
+                </a>
+            </section>
+        </aside>
+    </div>
+{% endblock %}

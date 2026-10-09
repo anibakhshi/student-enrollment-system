@@ -33,6 +33,11 @@ INSTALLED_APPS = [
     # Project applications
     "dashboard",
     "catalog",
+    "accounts.apps.AccountsConfig",
+    "student_management",
+    "instructor_management",
+    "course_management",
+    "enrollment_management",
 ]
 
 
@@ -131,7 +136,8 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
-
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
 STORAGES = {
     "default": {
         "BACKEND": (
@@ -148,10 +154,69 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Authentication configuration
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "dashboard:index"
+LOGOUT_REDIRECT_URL = "accounts:login"
+
+SESSION_COOKIE_AGE = 60 * 60 * 8
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+
+# Production security configuration
+SECURE_SSL_REDIRECT = (
+    os.getenv("DJANGO_SECURE_SSL_REDIRECT", "false").lower()
+    == "true"
+)
+
+SESSION_COOKIE_SECURE = (
+    os.getenv("DJANGO_SESSION_COOKIE_SECURE", "false").lower()
+    == "true"
+)
+
+CSRF_COOKIE_SECURE = (
+    os.getenv("DJANGO_CSRF_COOKIE_SECURE", "false").lower()
+    == "true"
+)
+
+SECURE_HSTS_SECONDS = int(
+    os.getenv("DJANGO_SECURE_HSTS_SECONDS", "0")
+)
+
+SECURE_HSTS_INCLUDE_SUBDOMAINS = (
+    os.getenv(
+        "DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS",
+        "false",
+    ).lower()
+    == "true"
+)
+
+SECURE_HSTS_PRELOAD = (
+    os.getenv("DJANGO_SECURE_HSTS_PRELOAD", "false").lower()
+    == "true"
+)
+
+if (
+    os.getenv(
+        "DJANGO_TRUST_PROXY_SSL_HEADER",
+        "false",
+    ).lower()
+    == "true"
+):
+    SECURE_PROXY_SSL_HEADER = (
+        "HTTP_X_FORWARDED_PROTO",
+        "https",
+    )
 
 # Go REST API configuration
 GO_API_BASE_URL = os.getenv(
     "GO_API_BASE_URL",
+    "http://localhost:8081",
+).rstrip("/")
+
+GO_API_PUBLIC_URL = os.getenv(
+    "GO_API_PUBLIC_URL",
     "http://localhost:8081",
 ).rstrip("/")
 

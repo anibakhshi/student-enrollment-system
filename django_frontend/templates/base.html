@@ -16,28 +16,33 @@
 
     <title>
         {% block title %}
-            {{ page_title }}
+            {{ page_title|default:"سامانه آموزشی" }}
         {% endblock %}
         | سامانه آموزشی
     </title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-<link
-    href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap"
-    rel="stylesheet"
->
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
 
-<link
-    rel="stylesheet"
-    href="{% static 'css/app.css' %}"
->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet"
+    >
 
-<link
-    rel="stylesheet"
-    href="{% static 'css/theme.css' %}"
->
+    <link
+        rel="stylesheet"
+        href="{% static 'css/app.css' %}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/theme.css' %}"
+    >
 
     {% block extra_css %}{% endblock %}
 </head>
@@ -46,12 +51,23 @@
     <div class="app-shell">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar__brand">
-                <div class="brand-mark">SE</div>
+                <a
+                    href="{% url 'dashboard:index' %}"
+                    style="
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        color: inherit;
+                        text-decoration: none;
+                    "
+                >
+                    <div class="brand-mark">SE</div>
 
-                <div>
-                    <strong>آکادمی فناوری</strong>
-                    <span>مدیریت دوره‌های تخصصی IT</span>
-                </div>
+                    <div>
+                        <strong>آکادمی فناوری</strong>
+                        <span>مدیریت دوره‌های تخصصی IT</span>
+                    </div>
+                </a>
 
                 <button
                     class="sidebar__close"
@@ -63,7 +79,10 @@
                 </button>
             </div>
 
-            <nav class="sidebar__nav">
+            <nav
+                class="sidebar__nav"
+                aria-label="منوی اصلی"
+            >
                 <p class="nav-title">مدیریت اصلی</p>
 
                 <a
@@ -74,56 +93,187 @@
                     <span>داشبورد</span>
                 </a>
 
-                <a class="nav-item disabled" href="#">
-                    <span class="nav-icon">◉</span>
-                    <span>دانشجویان</span>
+                {% if user.is_authenticated and user.profile.can_manage_education %}
+                <a
+                    class="nav-item {% if active_page == 'students' %}active{% endif %}"
+                    href="{% url 'students:list' %}"
+                >
+                <span class="nav-icon">◉</span>
+                <span>دانشجویان</span>
                 </a>
+                {% endif %}
 
-                <a class="nav-item {% if active_page == 'instructors' %}active{% endif %}" href="{% url 'catalog:instructor_list' %}">
+                {% if user.is_authenticated and user.profile.can_manage_education %}
+                <a class="nav-item {% if active_page == 'instructor_management' %}active{% endif %}" href="{% url 'instructor_management:list' %}">
+                    <span class="nav-icon">◇</span>
+                    <span>مدیریت استادان</span>
+                </a>
+                {% else %}
+                <a
+                    class="nav-item {% if active_page == 'instructors' %}active{% endif %}"
+                    href="{% url 'catalog:instructor_list' %}"
+    >
                     <span class="nav-icon">◇</span>
                     <span>استادان</span>
                 </a>
+                {% endif %}
 
-                <a class="nav-item {% if active_page == 'courses' %}active{% endif %}" href="{% url 'catalog:course_list' %}">
-                    <span class="nav-icon">▱</span>
-                    <span>دوره‌ها</span>
-                </a>
+                {% if user.is_authenticated and user.profile.can_manage_education %}
+    <a
+        class="nav-item {% if active_page == 'course_management' %}active{% endif %}"
+        href="{% url 'course_management:list' %}"
+    >
+        <span class="nav-icon">▱</span>
+        <span>مدیریت دوره‌ها</span>
+    </a>
+{% else %}
+    <a
+        class="nav-item {% if active_page == 'courses' %}active{% endif %}"
+        href="{% url 'catalog:course_list' %}"
+    >
+        <span class="nav-icon">▱</span>
+        <span>دوره‌ها</span>
+    </a>
+{% endif %}
 
                 <p class="nav-title">عملیات آموزشی</p>
 
-                <a class="nav-item disabled" href="#">
-                    <span class="nav-icon">✓</span>
-                    <span>ثبت‌نام‌ها</span>
-                </a>
+                {% if user.is_authenticated and user.profile.can_manage_education %}
+                    <a
+                        class="nav-item {% if active_page == 'enrollment_management' %}active{% endif %}"
+                        href="{% url 'enrollment_management:list' %}"
+                    >
+                        <span class="nav-icon">✓</span>
+                        <span>مدیریت ثبت‌نام‌ها</span>
+                    </a>
 
-                <a class="nav-item disabled" href="#">
-                    <span class="nav-icon">₿</span>
-                    <span>پرداخت‌ها</span>
-                </a>
+                    <a
+                        class="nav-item {% if active_page == 'payments' %}active{% endif %}"
+                        href="#"
+                        aria-disabled="true"
+                    >
+                        <span class="nav-icon">₿</span>
+                        <span>پرداخت‌ها</span>
+                    </a>
+                {% else %}
+                    <a
+                        class="nav-item disabled"
+                        href="#"
+                        aria-disabled="true"
+                    >
+                        <span class="nav-icon">✓</span>
+                        <span>ثبت‌نام‌ها</span>
+                    </a>
+
+                    <a
+                        class="nav-item disabled"
+                        href="#"
+                        aria-disabled="true"
+                    >
+                        <span class="nav-icon">₿</span>
+                        <span>پرداخت‌ها</span>
+                    </a>
+                {% endif %}
+
+                {% if user.is_authenticated %}
+                    <p class="nav-title">حساب کاربری</p>
+
+                    <a
+                        class="nav-item {% if active_page == 'profile' %}active{% endif %}"
+                        href="{% url 'accounts:profile' %}"
+                    >
+                        <span class="nav-icon">◎</span>
+                        <span>پروفایل من</span>
+                    </a>
+
+                    {% if user.is_staff or user.is_superuser %}
+                        <a
+                            class="nav-item"
+                            href="{% url 'admin:index' %}"
+                        >
+                            <span class="nav-icon">◆</span>
+                            <span>مدیریت Django</span>
+                        </a>
+                    {% endif %}
+
+                    <form
+                        method="post"
+                        action="{% url 'accounts:logout' %}"
+                        style="margin: 0;"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                            class="nav-item"
+                            type="submit"
+                            style="
+                                width: 100%;
+                                border: 0;
+                                text-align: right;
+                                font-family: inherit;
+                                cursor: pointer;
+                            "
+                        >
+                            <span class="nav-icon">←</span>
+                            <span>خروج از حساب</span>
+                        </button>
+                    </form>
+                {% else %}
+                    <p class="nav-title">حساب کاربری</p>
+
+                    <a
+                        class="nav-item"
+                        href="{% url 'accounts:login' %}"
+                    >
+                        <span class="nav-icon">→</span>
+                        <span>ورود به سامانه</span>
+                    </a>
+                {% endif %}
             </nav>
 
             <div class="sidebar__footer">
-                <div
-                    class="service-state {% if api_available %}online{% else %}offline{% endif %}"
-                >
-                    <span class="service-dot"></span>
-
-                    <div>
-                        <strong>
+                {% if api_base_url %}
+                    <div
+                        class="
+                            service-state
                             {% if api_available %}
-                                Go API فعال
+                                online
                             {% else %}
-                                Go API قطع
+                                offline
                             {% endif %}
-                        </strong>
+                        "
+                    >
+                        <span class="service-dot"></span>
 
-                        <small>{{ api_base_url }}</small>
+                        <div>
+                            <strong>
+                                {% if api_available %}
+                                    Go API فعال
+                                {% else %}
+                                    Go API قطع
+                                {% endif %}
+                            </strong>
+
+                            <small>{{ api_base_url }}</small>
+                        </div>
                     </div>
-                </div>
+                {% else %}
+                    <div class="service-state online">
+                        <span class="service-dot"></span>
+
+                        <div>
+                            <strong>پنل کاربری فعال</strong>
+                            <small>دسترسی امن به سامانه</small>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </aside>
 
-        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <div
+            class="sidebar-overlay"
+            id="sidebarOverlay"
+        ></div>
 
         <section class="main-area">
             <header class="topbar">
@@ -138,20 +288,115 @@
 
                 <div class="topbar__title">
                     <span>پنل مدیریت</span>
-                    <strong>{{ page_title }}</strong>
+
+                    <strong>
+                        {{ page_title|default:"سامانه آموزشی" }}
+                    </strong>
                 </div>
 
                 <div class="topbar__profile">
-                    <div>
-                        <strong>آنیتا بخشی</strong>
-                        <span>مدیر سیستم</span>
-                    </div>
+                    {% if user.is_authenticated %}
+                        <a
+                            href="{% url 'accounts:profile' %}"
+                            style="
+                                display: flex;
+                                align-items: center;
+                                gap: 12px;
+                                color: inherit;
+                                text-decoration: none;
+                            "
+                        >
+                            <div>
+                                <strong>
+                                    {% if user.get_full_name %}
+                                        {{ user.get_full_name }}
+                                    {% else %}
+                                        {{ user.username }}
+                                    {% endif %}
+                                </strong>
 
-                    <div class="profile-avatar">AB</div>
+                                <span>
+                                    {% if user.profile %}
+                                        {{ user.profile.get_role_display }}
+                                    {% else %}
+                                        کاربر سامانه
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            <div class="profile-avatar">
+                                {% if user.profile.avatar %}
+                                    <img
+                                        src="{{ user.profile.avatar.url }}"
+                                        alt="{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}"
+                                        style="
+                                            width: 100%;
+                                            height: 100%;
+                                            border-radius: inherit;
+                                            object-fit: cover;
+                                        "
+                                    >
+                                {% else %}
+                                    <span>
+                                        {% if user.first_name %}
+                                            {{ user.first_name|first }}
+                                        {% else %}
+                                            {{ user.username|first|upper }}
+                                        {% endif %}
+
+                                        {% if user.last_name %}
+                                            {{ user.last_name|first }}
+                                        {% endif %}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </a>
+                    {% else %}
+                        <a
+                            href="{% url 'accounts:login' %}"
+                            style="
+                                display: flex;
+                                align-items: center;
+                                gap: 10px;
+                                color: inherit;
+                                text-decoration: none;
+                                font-weight: 700;
+                            "
+                        >
+                            <div>
+                                <strong>ورود به سامانه</strong>
+                                <span>حساب کاربری</span>
+                            </div>
+
+                            <div class="profile-avatar">→</div>
+                        </a>
+                    {% endif %}
                 </div>
             </header>
 
             <main class="page-content">
+                {% if messages %}
+                    <section aria-label="پیام‌های سیستم">
+                        {% for message in messages %}
+                            <div
+                                class="
+                                    alert
+                                    {% if message.tags == 'error' %}
+                                        alert--danger
+                                    {% elif message.tags == 'success' %}
+                                        alert--success
+                                    {% else %}
+                                        alert--info
+                                    {% endif %}
+                                "
+                                role="alert"
+                            >
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </section>
+                {% endif %}
+
                 {% if errors %}
                     <section class="alert alert--danger">
                         <strong>بخشی از اطلاعات دریافت نشد</strong>
@@ -168,6 +413,7 @@
     </div>
 
     <script src="{% static 'js/app.js' %}"></script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

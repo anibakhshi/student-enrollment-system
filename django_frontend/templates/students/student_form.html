@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ page_title }}
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/students/students.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+<section class="students-page">
+    <nav class="student-breadcrumb">
+        <a href="{% url 'students:list' %}">
+            مدیریت دانشجویان
+        </a>
+
+        <span>←</span>
+        <strong>{{ page_title }}</strong>
+    </nav>
+
+    <header class="student-form-hero">
+        <div>
+            <span class="students-eyebrow">
+                {% if form_mode == "create" %}
+                    ایجاد پرونده دانشجویی
+                {% else %}
+                    به‌روزرسانی پرونده
+                {% endif %}
+            </span>
+
+            <h1>{{ page_title }}</h1>
+
+            <p>
+                اطلاعات را با دقت وارد کنید. فیلدهای
+                ستاره‌دار برای ثبت پرونده الزامی هستند.
+            </p>
+        </div>
+
+        {% if student %}
+            <div class="student-form-identity">
+                <div class="student-avatar">
+                    {% if student.profile_image_url %}
+                        <img
+                            src="{{ student.profile_image_url }}"
+                            alt="{{ student.full_name }}"
+                        >
+                    {% else %}
+                        <span>{{ student.initials }}</span>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <strong>{{ student.full_name }}</strong>
+                    <span>شناسه {{ student.id }}</span>
+                </div>
+            </div>
+        {% endif %}
+    </header>
+
+    <form
+        class="student-form-card"
+        method="post"
+        enctype="multipart/form-data"
+        novalidate
+    >
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="student-form-errors" role="alert">
+                <strong>ثبت اطلاعات انجام نشد</strong>
+
+                {% for error in form.non_field_errors %}
+                    <span>{{ error }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <section class="student-form-section">
+            <div class="student-section-heading">
+                <div>
+                    <span>مرحله اول</span>
+                    <h2>اطلاعات هویتی</h2>
+                </div>
+
+                <span class="student-section-number">01</span>
+            </div>
+
+            <div class="student-form-grid">
+                {% include "students/partials/form_field.html" with field=form.first_name %}
+                {% include "students/partials/form_field.html" with field=form.last_name %}
+                {% include "students/partials/form_field.html" with field=form.age %}
+                {% include "students/partials/form_field.html" with field=form.national_code %}
+            </div>
+        </section>
+
+        <section class="student-form-section">
+            <div class="student-section-heading">
+                <div>
+                    <span>مرحله دوم</span>
+                    <h2>اطلاعات تماس</h2>
+                </div>
+
+                <span class="student-section-number">02</span>
+            </div>
+
+            <div class="student-form-grid">
+                {% include "students/partials/form_field.html" with field=form.email %}
+                {% include "students/partials/form_field.html" with field=form.phone %}
+            </div>
+        </section>
+
+        <section class="student-form-section">
+            <div class="student-section-heading">
+                <div>
+                    <span>مرحله سوم</span>
+                    <h2>تصویر پروفایل</h2>
+                </div>
+
+                <span class="student-section-number">03</span>
+            </div>
+
+            <div class="student-photo-upload">
+                <div
+                    class="student-photo-preview"
+                    id="studentPhotoPreview"
+                >
+                    {% if student.profile_image_url %}
+                        <img
+                            id="studentPhotoPreviewImage"
+                            src="{{ student.profile_image_url }}"
+                            alt="{{ student.full_name }}"
+                        >
+                    {% else %}
+                        <img
+                            id="studentPhotoPreviewImage"
+                            src=""
+                            alt=""
+                            hidden
+                        >
+
+                        <span id="studentPhotoPlaceholder">
+                            افزودن تصویر
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="student-photo-upload__content">
+                    <label for="{{ form.photo.id_for_label }}">
+                        {{ form.photo.label }}
+                    </label>
+
+                    {{ form.photo }}
+
+                    {% if form.photo.help_text %}
+                        <small>{{ form.photo.help_text }}</small>
+                    {% endif %}
+
+                    {% for error in form.photo.errors %}
+                        <span class="student-field-error">
+                            {{ error }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <footer class="student-form-actions">
+            <a
+                class="student-secondary-button"
+                href="{% if student %}{% url 'students:detail' student.id %}{% else %}{% url 'students:list' %}{% endif %}"
+            >
+                انصراف
+            </a>
+
+            <button
+                class="student-primary-button"
+                type="submit"
+            >
+                {{ submit_label }}
+            </button>
+        </footer>
+    </form>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/students/students.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,32 @@
+<div class="student-form-field {% if field.errors %}student-form-field--error{% endif %}">
+    <label for="{{ field.id_for_label }}">
+        {{ field.label }}
+
+        {% if field.field.required %}
+            <span
+                class="student-required-mark"
+                aria-hidden="true"
+            >
+                *
+            </span>
+        {% endif %}
+    </label>
+
+    {{ field }}
+
+    {% if field.help_text %}
+        <small class="student-form-help">
+            {{ field.help_text }}
+        </small>
+    {% endif %}
+
+    <div
+        class="student-field-errors"
+        id="{{ field.id_for_label }}_errors"
+        aria-live="polite"
+    >
+        {% for error in field.errors %}
+            <span>{{ error }}</span>
+        {% endfor %}
+    </div>
+</div>

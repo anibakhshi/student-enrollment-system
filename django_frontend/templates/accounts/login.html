@@ -1,0 +1,168 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+    <meta name="theme-color" content="#071426">
+
+    <title>ورود | سامانه مدیریت آموزش</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/accounts/auth.css' %}"
+    >
+</head>
+
+<body class="auth-page">
+    <main class="auth-shell">
+        <section class="auth-showcase">
+            <a
+                class="auth-brand"
+                href="{% url 'dashboard:index' %}"
+            >
+                <span class="auth-brand__mark">SE</span>
+
+                <span>
+                    <strong>آکادمی فناوری</strong>
+                    <small>Student Enrollment System</small>
+                </span>
+            </a>
+
+            <div class="auth-showcase__content">
+                <span class="auth-eyebrow">
+                    سامانه یکپارچه مدیریت آموزش
+                </span>
+
+                <h1>
+                    مدیریت حرفه‌ای آموزش،
+                    <em>ساده و هوشمند</em>
+                </h1>
+
+                <p>
+                    دانشجویان، استادان، دوره‌ها، ثبت‌نام‌ها و
+                    پرداخت‌ها را از یک پنل امن و یکپارچه مدیریت کنید.
+                </p>
+
+                <div class="auth-features">
+                    <article>
+                        <span>01</span>
+                        <div>
+                            <strong>معماری قدرتمند</strong>
+                            <small>Go REST API و Django GUI</small>
+                        </div>
+                    </article>
+
+                    <article>
+                        <span>02</span>
+                        <div>
+                            <strong>دسترسی کنترل‌شده</strong>
+                            <small>مدیر، کارشناس، استاد و دانشجو</small>
+                        </div>
+                    </article>
+
+                    <article>
+                        <span>03</span>
+                        <div>
+                            <strong>اطلاعات یکپارچه</strong>
+                            <small>دوره، ثبت‌نام و پرداخت</small>
+                        </div>
+                    </article>
+                </div>
+            </div>
+
+            <p class="auth-showcase__footer">
+                نسخه ۱.۲ — پنل مدیریت هوشمند آموزشی
+            </p>
+        </section>
+
+        <section class="auth-panel">
+            <div class="auth-card">
+                <header class="auth-card__header">
+                    <span class="auth-card__icon">↗</span>
+                    <p>خوش آمدید</p>
+                    <h2>ورود به حساب کاربری</h2>
+                    <span>
+                        برای دسترسی به پنل، اطلاعات حساب خود را وارد کنید.
+                    </span>
+                </header>
+
+                {% if form.non_field_errors %}
+                    <div class="auth-alert" role="alert">
+                        {% for error in form.non_field_errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" class="auth-form">
+                    {% csrf_token %}
+
+                    {% if next %}
+                        <input
+                            type="hidden"
+                            name="next"
+                            value="{{ next }}"
+                        >
+                    {% endif %}
+
+                    <div class="auth-field">
+                        <label for="{{ form.username.id_for_label }}">
+                            {{ form.username.label }}
+                        </label>
+
+                        <div class="auth-input-wrap">
+                            <span class="auth-input-icon">◇</span>
+                            {{ form.username }}
+                        </div>
+
+                        {% for error in form.username.errors %}
+                            <small class="auth-field-error">
+                                {{ error }}
+                            </small>
+                        {% endfor %}
+                    </div>
+
+                    <div class="auth-field">
+                        <label for="{{ form.password.id_for_label }}">
+                            {{ form.password.label }}
+                        </label>
+
+                        <div class="auth-input-wrap">
+                            <span class="auth-input-icon">○</span>
+                            {{ form.password }}
+                        </div>
+
+                        {% for error in form.password.errors %}
+                            <small class="auth-field-error">
+                                {{ error }}
+                            </small>
+                        {% endfor %}
+                    </div>
+
+                    <button class="auth-submit" type="submit">
+                        <span>ورود به پنل مدیریت</span>
+                        <span aria-hidden="true">←</span>
+                    </button>
+                </form>
+
+                <footer class="auth-card__footer">
+                    <span class="security-dot"></span>
+                    ارتباط امن و محافظت‌شده
+                </footer>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

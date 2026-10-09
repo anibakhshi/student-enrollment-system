@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ page_title }}
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/enrollments_management/enrollments.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+    <nav class="student-breadcrumb" aria-label="مسیر صفحه">
+        <a href="{% url 'dashboard:index' %}">داشبورد</a>
+        <span>‹</span>
+        <strong>مدیریت ثبت‌نام‌ها</strong>
+    </nav>
+
+    <section class="enrollment-hero">
+        <div>
+            <span class="student-eyebrow">
+                عملیات آموزشی
+            </span>
+
+            <h1>مدیریت ثبت‌نام‌های آموزشی</h1>
+
+            <p>
+                ثبت‌نام دانشجویان در دوره‌ها، کنترل وضعیت‌ها و
+                پیگیری چرخه آموزشی را از این بخش انجام دهید.
+            </p>
+        </div>
+
+        <a
+            class="student-primary-button"
+            href="{% url 'enrollment_management:create' %}"
+        >
+            <span>＋</span>
+            ثبت‌نام جدید
+        </a>
+    </section>
+
+    {% if api_error %}
+        <section class="alert alert--danger">
+            <strong>بخشی از اطلاعات دریافت نشد</strong>
+            <span>{{ api_error }}</span>
+        </section>
+    {% endif %}
+
+    <section class="enrollment-stats">
+        <article class="enrollment-stat enrollment-stat--total">
+            <span class="enrollment-stat__icon">◎</span>
+
+            <div>
+                <small>کل ثبت‌نام‌ها</small>
+                <strong>{{ total_enrollments }}</strong>
+            </div>
+        </article>
+
+        <article class="enrollment-stat enrollment-stat--pending">
+            <span class="enrollment-stat__icon">◷</span>
+
+            <div>
+                <small>در انتظار تأیید</small>
+                <strong>{{ status_counts.pending|default:"0" }}</strong>
+            </div>
+        </article>
+
+        <article class="enrollment-stat enrollment-stat--confirmed">
+            <span class="enrollment-stat__icon">✓</span>
+
+            <div>
+                <small>تأییدشده</small>
+                <strong>{{ status_counts.confirmed|default:"0" }}</strong>
+            </div>
+        </article>
+
+        <article class="enrollment-stat enrollment-stat--completed">
+            <span class="enrollment-stat__icon">◆</span>
+
+            <div>
+                <small>تکمیل‌شده</small>
+                <strong>{{ status_counts.completed|default:"0" }}</strong>
+            </div>
+        </article>
+    </section>
+
+    <section class="enrollment-toolbar">
+        <form
+            method="get"
+            class="enrollment-filter-form"
+            aria-label="جست‌وجو و فیلتر ثبت‌نام‌ها"
+        >
+            <div class="enrollment-search">
+                <span aria-hidden="true">⌕</span>
+                {{ search_form.q }}
+            </div>
+
+            <div class="enrollment-filter">
+                {{ search_form.status }}
+            </div>
+
+            <div class="enrollment-filter">
+                {{ search_form.student }}
+            </div>
+
+            <div class="enrollment-filter">
+                {{ search_form.course }}
+            </div>
+
+            <button
+                class="student-primary-button"
+                type="submit"
+            >
+                اعمال فیلتر
+            </button>
+
+            {% if current_query or current_status or current_student or current_course %}
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'enrollment_management:list' %}"
+                >
+                    پاک‌کردن
+                </a>
+            {% endif %}
+        </form>
+    </section>
+
+    {% if enrollments %}
+        <section class="enrollment-grid">
+            {% for enrollment in enrollments %}
+                <article class="enrollment-card">
+                    <header class="enrollment-card__header">
+                        <div class="enrollment-card__number">
+                            <span>ثبت‌نام</span>
+                            <strong>#{{ enrollment.id }}</strong>
+                        </div>
+
+                        <span
+                            class="enrollment-status enrollment-status--{{ enrollment.status }}"
+                        >
+                            <i></i>
+                            {{ enrollment.status_label }}
+                        </span>
+                    </header>
+
+                    <div class="enrollment-card__student">
+                        <div class="enrollment-avatar">
+                            {{ enrollment.student_name|slice:":1"|upper }}
+                        </div>
+
+                        <div>
+                            <small>دانشجو</small>
+                            <h2>{{ enrollment.student_name }}</h2>
+
+                            {% if enrollment.student.national_code %}
+                                <span>
+                                    کد ملی:
+                                    {{ enrollment.student.national_code }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="enrollment-card__course">
+                        <span class="enrollment-card__course-icon">▱</span>
+
+                        <div>
+                            <small>دوره آموزشی</small>
+                            <strong>{{ enrollment.course_name }}</strong>
+                        </div>
+                    </div>
+
+                    <dl class="enrollment-card__meta">
+                        <div>
+                            <dt>تاریخ ثبت‌نام</dt>
+                            <dd>
+                                {{ enrollment.enrolled_at_date|default:"—" }}
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>آخرین تغییر</dt>
+                            <dd>
+                                {{ enrollment.updated_at_date|default:"—" }}
+                            </dd>
+                        </div>
+                    </dl>
+
+                    {% if enrollment.notes %}
+                        <p class="enrollment-card__notes">
+                            {{ enrollment.notes|truncatechars:110 }}
+                        </p>
+                    {% endif %}
+
+                    <footer class="enrollment-card__actions">
+                        <a
+                            class="enrollment-action enrollment-action--view"
+                            href="{% url 'enrollment_management:detail' enrollment.id %}"
+                        >
+                            مشاهده جزئیات
+                        </a>
+
+                        {% if not enrollment.is_terminal %}
+                            <a
+                                class="enrollment-action enrollment-action--edit"
+                                href="{% url 'enrollment_management:update' enrollment.id %}"
+                            >
+                                تغییر وضعیت
+                            </a>
+                        {% endif %}
+                    </footer>
+                </article>
+            {% endfor %}
+        </section>
+
+        {% if page_obj.has_other_pages %}
+            <nav
+                class="student-pagination"
+                aria-label="صفحه‌بندی ثبت‌نام‌ها"
+            >
+                {% if page_obj.has_previous %}
+                    <a
+                        href="?page={{ page_obj.previous_page_number }}&q={{ current_query|urlencode }}&status={{ current_status|urlencode }}&student={{ current_student|urlencode }}&course={{ current_course|urlencode }}"
+                    >
+                        صفحه قبل
+                    </a>
+                {% else %}
+                    <span class="disabled">صفحه قبل</span>
+                {% endif %}
+
+                <span class="student-pagination__current">
+                    صفحه {{ page_obj.number }}
+                    از {{ paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a
+                        href="?page={{ page_obj.next_page_number }}&q={{ current_query|urlencode }}&status={{ current_status|urlencode }}&student={{ current_student|urlencode }}&course={{ current_course|urlencode }}"
+                    >
+                        صفحه بعد
+                    </a>
+                {% else %}
+                    <span class="disabled">صفحه بعد</span>
+                {% endif %}
+            </nav>
+        {% endif %}
+    {% else %}
+        <section class="enrollment-empty">
+            <div class="enrollment-empty__icon">✓</div>
+
+            <h2>ثبت‌نامی پیدا نشد</h2>
+
+            <p>
+                {% if current_query or current_status or current_student or current_course %}
+                    نتیجه‌ای با فیلترهای انتخاب‌شده وجود ندارد.
+                {% else %}
+                    هنوز هیچ ثبت‌نام آموزشی در سامانه ایجاد نشده است.
+                {% endif %}
+            </p>
+
+            {% if current_query or current_status or current_student or current_course %}
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'enrollment_management:list' %}"
+                >
+                    مشاهده همه ثبت‌نام‌ها
+                </a>
+            {% else %}
+                <a
+                    class="student-primary-button"
+                    href="{% url 'enrollment_management:create' %}"
+                >
+                    ایجاد اولین ثبت‌نام
+                </a>
+            {% endif %}
+        </section>
+    {% endif %}
+{% endblock %}

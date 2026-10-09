@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ page_title }}
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/courses_management/courses.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+    <nav class="student-breadcrumb" aria-label="مسیر صفحه">
+        <a href="{% url 'dashboard:index' %}">
+            داشبورد
+        </a>
+
+        <span>‹</span>
+
+        <a href="{% url 'course_management:list' %}">
+            مدیریت دوره‌ها
+        </a>
+
+        <span>‹</span>
+
+        <strong>{{ page_title }}</strong>
+    </nav>
+
+    <section class="student-form-hero">
+        <div>
+            <span class="student-eyebrow">
+                {% if form_mode == "update" %}
+                    ویرایش اطلاعات آموزشی
+                {% else %}
+                    تعریف دوره آموزشی
+                {% endif %}
+            </span>
+
+            <h1>{{ page_title }}</h1>
+
+            <p>
+                {% if form_mode == "update" %}
+                    اطلاعات دوره، استاد، زمان‌بندی و وضعیت برگزاری را
+                    ویرایش کنید.
+                {% else %}
+                    مشخصات دوره جدید را ثبت کرده و استاد و زمان‌بندی
+                    مناسب را تعیین کنید.
+                {% endif %}
+            </p>
+        </div>
+
+        <a
+            class="student-secondary-button"
+            href="{% url 'course_management:list' %}"
+        >
+            بازگشت به فهرست
+        </a>
+    </section>
+
+    {% if api_error %}
+        <section class="alert alert--danger">
+            <strong>امکان دریافت اطلاعات کامل وجود ندارد</strong>
+            <span>{{ api_error }}</span>
+        </section>
+    {% endif %}
+
+    {% if form.non_field_errors %}
+        <section class="alert alert--danger">
+            <strong>اطلاعات فرم نیاز به اصلاح دارد</strong>
+
+            {% for error in form.non_field_errors %}
+                <span>{{ error }}</span>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <form
+        class="student-form"
+        method="post"
+        novalidate
+        data-course-form
+    >
+        {% csrf_token %}
+
+        <section class="student-form-section">
+            <header class="student-form-section__header">
+                <div>
+                    <span class="student-form-section__icon">▱</span>
+
+                    <div>
+                        <h2>مشخصات اصلی دوره</h2>
+                        <p>
+                            کد، عنوان و استاد برگزارکننده دوره را مشخص کنید.
+                        </p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="student-form-grid">
+                {% include "courses_management/partials/form_field.html" with field=form.code %}
+
+                {% include "courses_management/partials/form_field.html" with field=form.title %}
+
+                {% include "courses_management/partials/form_field.html" with field=form.instructor_id %}
+            </div>
+        </section>
+
+        <section class="student-form-section">
+            <header class="student-form-section__header">
+                <div>
+                    <span class="student-form-section__icon">◈</span>
+
+                    <div>
+                        <h2>ظرفیت و اطلاعات مالی</h2>
+                        <p>
+                            شهریه، ظرفیت کلاس و مدت دوره را وارد کنید.
+                        </p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="student-form-grid">
+                {% include "courses_management/partials/form_field.html" with field=form.price %}
+
+                {% include "courses_management/partials/form_field.html" with field=form.capacity %}
+
+                {% include "courses_management/partials/form_field.html" with field=form.duration_hours %}
+            </div>
+        </section>
+
+        <section class="student-form-section">
+            <header class="student-form-section__header">
+                <div>
+                    <span class="student-form-section__icon">◷</span>
+
+                    <div>
+                        <h2>زمان‌بندی و وضعیت</h2>
+                        <p>
+                            بازه زمانی برگزاری و وضعیت عملیاتی دوره را
+                            تعیین کنید.
+                        </p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="student-form-grid">
+                {% include "courses_management/partials/form_field.html" with field=form.start_date %}
+
+                {% include "courses_management/partials/form_field.html" with field=form.end_date %}
+
+                {% if form_mode == "update" %}
+                    {% include "courses_management/partials/form_field.html" with field=form.status %}
+                {% endif %}
+            </div>
+
+            {% if form_mode == "create" %}
+                <div class="course-form-note">
+                    <span>ℹ</span>
+
+                    <p>
+                        دوره جدید ابتدا با وضعیت «پیش‌نویس» ایجاد می‌شود.
+                        پس از ایجاد، می‌توانید وضعیت آن را از صفحه ویرایش
+                        تغییر دهید.
+                    </p>
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="student-form-section">
+            <header class="student-form-section__header">
+                <div>
+                    <span class="student-form-section__icon">✎</span>
+
+                    <div>
+                        <h2>توضیحات دوره</h2>
+                        <p>
+                            محتوای آموزشی، پیش‌نیازها و اهداف دوره را
+                            توضیح دهید.
+                        </p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="student-form-grid">
+                <div class="student-form-field--full">
+                    {% include "courses_management/partials/form_field.html" with field=form.description %}
+                </div>
+            </div>
+        </section>
+
+        <footer class="student-form-actions">
+            <a
+                class="student-secondary-button"
+                href="{% url 'course_management:list' %}"
+            >
+                انصراف
+            </a>
+
+            <button
+                class="student-primary-button"
+                type="submit"
+                data-submit-button
+            >
+                <span data-submit-label>
+                    {% if form_mode == "update" %}
+                        ذخیره تغییرات
+                    {% else %}
+                        ایجاد دوره
+                    {% endif %}
+                </span>
+
+                <span
+                    class="student-button-loader"
+                    data-submit-loader
+                    hidden
+                >
+                    در حال ذخیره...
+                </span>
+            </button>
+        </footer>
+    </form>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/courses_management/courses.js' %}"></script>
+{% endblock %}
