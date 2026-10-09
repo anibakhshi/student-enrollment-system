@@ -10,6 +10,10 @@ urlpatterns = [
     path("students/",include("student_management.urls"),),
     path("", include("dashboard.urls")),
     path("", include("catalog.urls")),
+    path(
+    "management/instructors/",
+    include("instructor_management.urls"),
+),
 ]
 
 

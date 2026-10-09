@@ -103,13 +103,20 @@
                 </a>
                 {% endif %}
 
+                {% if user.is_authenticated and user.profile.can_manage_education %}
+                <a class="nav-item {% if active_page == 'instructor_management' %}active{% endif %}"href="{% url 'instructor_management:list' %}">
+                    <span class="nav-icon">◇</span>
+                    <span>مدیریت استادان</span>
+                </a>
+                {% else %}
                 <a
                     class="nav-item {% if active_page == 'instructors' %}active{% endif %}"
                     href="{% url 'catalog:instructor_list' %}"
-                >
+    >
                     <span class="nav-icon">◇</span>
                     <span>استادان</span>
                 </a>
+                {% endif %}
 
                 <a
                     class="nav-item {% if active_page == 'courses' %}active{% endif %}"

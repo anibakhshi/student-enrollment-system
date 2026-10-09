@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    مدیریت استادان
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/instructors_management/instructors.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+<section class="students-page">
+    <header class="students-hero">
+        <div class="students-hero__content">
+            <span class="students-eyebrow">
+                مدیریت سرمایه‌های علمی مجموعه
+            </span>
+
+            <h1>مدیریت استادان</h1>
+
+            <p>
+                اطلاعات استادان، حوزه‌های تخصصی و وضعیت
+                همکاری آن‌ها را مدیریت کنید. تمام تغییرات
+                مستقیماً در سرویس اصلی Go ذخیره می‌شوند.
+            </p>
+
+            <div class="students-hero__stats">
+                <div class="students-mini-stat">
+                    <strong>{{ total_instructors }}</strong>
+                    <span>استاد در نتایج فعلی</span>
+                </div>
+
+                <div class="students-mini-stat">
+                    <strong>{{ active_instructors }}</strong>
+                    <span>استاد فعال</span>
+                </div>
+
+                <div class="students-mini-stat">
+                    <strong>{{ inactive_instructors }}</strong>
+                    <span>استاد غیرفعال</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="students-hero__actions">
+            <a
+                class="student-primary-button"
+                href="{% url 'instructor_management:create' %}"
+            >
+                <span class="button-icon">＋</span>
+                <span>ثبت استاد جدید</span>
+            </a>
+        </div>
+    </header>
+
+    {% if api_error %}
+        <section class="student-api-error" role="alert">
+            <div class="student-api-error__icon">!</div>
+
+            <div>
+                <strong>
+                    دریافت اطلاعات استادان ممکن نشد
+                </strong>
+                <p>{{ api_error }}</p>
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="students-toolbar">
+        <form
+            class="student-search-form"
+            method="get"
+            action="{% url 'instructor_management:list' %}"
+        >
+            <div class="student-search-box">
+                <span class="student-search-icon">⌕</span>
+                {{ search_form.q }}
+
+                {% if current_query %}
+                    <a
+                        class="student-search-clear"
+                        href="{% url 'instructor_management:list' %}{% if current_status %}?status={{ current_status|urlencode }}{% endif %}"
+                        aria-label="پاک‌کردن عبارت جست‌وجو"
+                    >
+                        ×
+                    </a>
+                {% endif %}
+            </div>
+
+            <div class="instructor-status-filter">
+                {{ search_form.status }}
+            </div>
+
+            <button
+                class="student-secondary-button"
+                type="submit"
+            >
+                اعمال فیلتر
+            </button>
+
+            {% if current_query or current_status %}
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'instructor_management:list' %}"
+                >
+                    حذف فیلترها
+                </a>
+            {% endif %}
+        </form>
+
+        <div class="students-toolbar__meta">
+            {% if current_query %}
+                <span>
+                    نتیجه جست‌وجوی
+                    <strong>«{{ current_query }}»</strong>
+                </span>
+            {% elif current_status == "active" %}
+                <span>نمایش استادان فعال</span>
+            {% elif current_status == "inactive" %}
+                <span>نمایش استادان غیرفعال</span>
+            {% else %}
+                <span>آخرین اطلاعات ثبت‌شده در سامانه</span>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if instructors %}
+        <section class="students-grid">
+            {% for instructor in instructors %}
+                <article class="student-card">
+                    <div class="student-card__top">
+                        <div class="student-avatar">
+                            <span>{{ instructor.initials }}</span>
+                        </div>
+
+                        <div class="student-card__identity">
+                            <span class="student-id">
+                                شناسه استاد: {{ instructor.id }}
+                            </span>
+
+                            <h2>{{ instructor.full_name }}</h2>
+
+                            <span class="student-status {% if not instructor.is_active %}student-status--inactive{% endif %}">
+                                <span></span>
+                                {{ instructor.status_label }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="student-card__information">
+                        <div class="student-info-row">
+                            <span class="student-info-row__label">
+                                تخصص
+                            </span>
+
+                            <strong>
+                                {{ instructor.expertise|default:"ثبت نشده" }}
+                            </strong>
+                        </div>
+
+                        <div class="student-info-row">
+                            <span class="student-info-row__label">
+                                موبایل
+                            </span>
+
+                            <strong dir="ltr">
+                                {{ instructor.phone|default:"—" }}
+                            </strong>
+                        </div>
+
+                        <div class="student-info-row student-info-row--email">
+                            <span class="student-info-row__label">
+                                ایمیل
+                            </span>
+
+                            <strong dir="ltr">
+                                {{ instructor.email|default:"—" }}
+                            </strong>
+                        </div>
+
+                        <div class="student-info-row">
+                            <span class="student-info-row__label">
+                                وضعیت همکاری
+                            </span>
+
+                            <strong>
+                                {{ instructor.status_label }}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <footer class="student-card__actions">
+                        <a
+                            class="student-card-button student-card-button--primary"
+                            href="{% url 'instructor_management:detail' instructor.id %}"
+                        >
+                            مشاهده پرونده
+                        </a>
+
+                        <a
+                            class="student-card-button"
+                            href="{% url 'instructor_management:update' instructor.id %}"
+                        >
+                            ویرایش
+                        </a>
+                    </footer>
+                </article>
+            {% endfor %}
+        </section>
+
+        {% if page_obj.has_other_pages %}
+            <nav
+                class="student-pagination"
+                aria-label="صفحه‌بندی استادان"
+            >
+                <div class="student-pagination__summary">
+                    صفحه
+                    <strong>{{ page_obj.number }}</strong>
+                    از
+                    <strong>{{ paginator.num_pages }}</strong>
+                </div>
+
+                <div class="student-pagination__links">
+                    {% if page_obj.has_previous %}
+                        <a href="?q={{ current_query|urlencode }}&status={{ current_status|urlencode }}&page=1">
+                            ابتدا
+                        </a>
+
+                        <a href="?q={{ current_query|urlencode }}&status={{ current_status|urlencode }}&page={{ page_obj.previous_page_number }}">
+                            قبلی
+                        </a>
+                    {% endif %}
+
+                    {% for page_number in paginator.page_range %}
+                        {% if page_number == page_obj.number %}
+                            <span
+                                class="active"
+                                aria-current="page"
+                            >
+                                {{ page_number }}
+                            </span>
+                        {% elif page_number >= page_obj.number|add:"-2" and page_number <= page_obj.number|add:"2" %}
+                            <a href="?q={{ current_query|urlencode }}&status={{ current_status|urlencode }}&page={{ page_number }}">
+                                {{ page_number }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <a href="?q={{ current_query|urlencode }}&status={{ current_status|urlencode }}&page={{ page_obj.next_page_number }}">
+                            بعدی
+                        </a>
+
+                        <a href="?q={{ current_query|urlencode }}&status={{ current_status|urlencode }}&page={{ paginator.num_pages }}">
+                            انتها
+                        </a>
+                    {% endif %}
+                </div>
+            </nav>
+        {% endif %}
+    {% else %}
+        <section class="students-empty-state">
+            <div class="students-empty-state__illustration">
+                <span>◇</span>
+            </div>
+
+            {% if current_query or current_status %}
+                <h2>استادی مطابق فیلترها پیدا نشد</h2>
+
+                <p>
+                    عبارت جست‌وجو یا وضعیت همکاری را
+                    تغییر دهید و دوباره تلاش کنید.
+                </p>
+
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'instructor_management:list' %}"
+                >
+                    نمایش همه استادان
+                </a>
+            {% elif api_error %}
+                <h2>سرویس استادان در دسترس نیست</h2>
+
+                <p>
+                    پس از اطمینان از فعال‌بودن Go API،
+                    صفحه را دوباره بارگذاری کنید.
+                </p>
+
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'instructor_management:list' %}"
+                >
+                    تلاش مجدد
+                </a>
+            {% else %}
+                <h2>هنوز استادی ثبت نشده است</h2>
+
+                <p>
+                    برای ایجاد اولین پرونده، استاد جدیدی
+                    در سامانه ثبت کنید.
+                </p>
+
+                <a
+                    class="student-primary-button"
+                    href="{% url 'instructor_management:create' %}"
+                >
+                    ثبت اولین استاد
+                </a>
+            {% endif %}
+        </section>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/instructors_management/instructors.js' %}"></script>
+{% endblock %}
+.instructor-status-filter {
+    min-width: 170px;
+}
+
+.instructor-status-filter select {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 16px;
+    color: #172033;
+    font-family: inherit;
+    font-size: 0.9rem;
+    background: #ffffff;
+    border: 1px solid rgba(126, 93, 255, 0.18);
+    border-radius: 14px;
+    outline: none;
+}
+
+.instructor-status-filter select:focus {
+    border-color: #7e5dff;
+    box-shadow: 0 0 0 4px rgba(126, 93, 255, 0.1);
+}
+
+.student-status--inactive {
+    color: #9a5b16;
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.student-status--inactive > span {
+    background: #f59e0b;
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.13);
+}
+
+@media (max-width: 720px) {
+    .instructor-status-filter {
+        width: 100%;
+    }
+}

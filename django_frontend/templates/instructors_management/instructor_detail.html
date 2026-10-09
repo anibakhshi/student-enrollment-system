@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ instructor.full_name|default:"جزئیات استاد" }}
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/instructors_management/instructors.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+<section class="students-page">
+    <nav class="student-breadcrumb">
+        <a href="{% url 'instructor_management:list' %}">
+            مدیریت استادان
+        </a>
+
+        <span>←</span>
+        <strong>جزئیات پرونده</strong>
+    </nav>
+
+    {% if api_error %}
+        <section class="student-api-error" role="alert">
+            <div class="student-api-error__icon">!</div>
+
+            <div>
+                <strong>دریافت اطلاعات ممکن نشد</strong>
+                <p>{{ api_error }}</p>
+            </div>
+        </section>
+
+    {% elif instructor %}
+        <header class="student-profile-hero">
+            <div class="student-profile-hero__identity">
+                <div class="student-profile-avatar">
+                    <span>{{ instructor.initials }}</span>
+                </div>
+
+                <div>
+                    <span class="students-eyebrow">
+                        پرونده استاد شماره {{ instructor.id }}
+                    </span>
+
+                    <h1>{{ instructor.full_name }}</h1>
+
+                    <div class="student-profile-status {% if not instructor.is_active %}student-status--inactive{% endif %}">
+                        <span></span>
+                        {{ instructor.status_label }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="student-profile-hero__actions">
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'instructor_management:list' %}"
+                >
+                    بازگشت به فهرست
+                </a>
+
+                <a
+                    class="student-primary-button"
+                    href="{% url 'instructor_management:update' instructor.id %}"
+                >
+                    ویرایش اطلاعات
+                </a>
+            </div>
+        </header>
+
+        <div class="student-detail-layout">
+            <section class="student-detail-panel">
+                <div class="student-section-heading">
+                    <div>
+                        <span>اطلاعات هویتی</span>
+                        <h2>مشخصات اصلی استاد</h2>
+                    </div>
+
+                    <span class="student-section-icon">◎</span>
+                </div>
+
+                <div class="student-detail-grid">
+                    <div class="student-detail-item">
+                        <span>نام</span>
+                        <strong>
+                            {{ instructor.first_name|default:"—" }}
+                        </strong>
+                    </div>
+
+                    <div class="student-detail-item">
+                        <span>نام خانوادگی</span>
+                        <strong>
+                            {{ instructor.last_name|default:"—" }}
+                        </strong>
+                    </div>
+
+                    <div class="student-detail-item">
+                        <span>شناسه استاد</span>
+                        <strong>
+                            {{ instructor.id }}
+                        </strong>
+                    </div>
+
+                    <div class="student-detail-item">
+                        <span>وضعیت همکاری</span>
+                        <strong>
+                            {{ instructor.status_label }}
+                        </strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="student-detail-panel">
+                <div class="student-section-heading">
+                    <div>
+                        <span>اطلاعات ارتباطی</span>
+                        <h2>راه‌های تماس با استاد</h2>
+                    </div>
+
+                    <span class="student-section-icon">◇</span>
+                </div>
+
+                <div class="student-detail-grid">
+                    <div class="student-detail-item">
+                        <span>شماره موبایل</span>
+
+                        {% if instructor.phone %}
+                            <a
+                                href="tel:{{ instructor.phone }}"
+                                dir="ltr"
+                            >
+                                {{ instructor.phone }}
+                            </a>
+                        {% else %}
+                            <strong>—</strong>
+                        {% endif %}
+                    </div>
+
+                    <div class="student-detail-item">
+                        <span>ایمیل</span>
+
+                        {% if instructor.email %}
+                            <a
+                                href="mailto:{{ instructor.email }}"
+                                dir="ltr"
+                            >
+                                {{ instructor.email }}
+                            </a>
+                        {% else %}
+                            <strong>—</strong>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="student-detail-panel">
+                <div class="student-section-heading">
+                    <div>
+                        <span>اطلاعات حرفه‌ای</span>
+                        <h2>تخصص و معرفی استاد</h2>
+                    </div>
+
+                    <span class="student-section-icon">▱</span>
+                </div>
+
+                <div class="student-detail-grid">
+                    <div class="student-detail-item student-detail-item--wide">
+                        <span>حوزه تخصص</span>
+                        <strong>
+                            {{ instructor.expertise|default:"ثبت نشده" }}
+                        </strong>
+                    </div>
+
+                    <div class="student-detail-item student-detail-item--wide">
+                        <span>معرفی استاد</span>
+
+                        <div class="instructor-biography">
+                            {{ instructor.bio|default:"هنوز توضیحی برای این استاد ثبت نشده است."|linebreaksbr }}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="student-detail-panel">
+                <div class="student-section-heading">
+                    <div>
+                        <span>اطلاعات سیستمی</span>
+                        <h2>زمان ثبت و آخرین تغییرات</h2>
+                    </div>
+
+                    <span class="student-section-icon">⌁</span>
+                </div>
+
+                <div class="student-detail-grid">
+                    <div class="student-detail-item">
+                        <span>تاریخ ایجاد</span>
+                        <strong dir="ltr">
+                            {{ instructor.created_at|default:"—" }}
+                        </strong>
+                    </div>
+
+                    <div class="student-detail-item">
+                        <span>آخرین به‌روزرسانی</span>
+                        <strong dir="ltr">
+                            {{ instructor.updated_at|default:"—" }}
+                        </strong>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer class="student-danger-zone">
+            <div>
+                <strong>حذف پرونده استاد</strong>
+
+                <p>
+                    حذف استاد ممکن است روی دوره‌های مرتبط
+                    اثر بگذارد. پیش از حذف، وابستگی‌های
+                    آموزشی را بررسی کنید.
+                </p>
+            </div>
+
+            <a
+                class="student-danger-button"
+                href="{% url 'instructor_management:delete' instructor.id %}"
+            >
+                حذف استاد
+            </a>
+        </footer>
+    {% endif %}
+</section>
+{% endblock %}

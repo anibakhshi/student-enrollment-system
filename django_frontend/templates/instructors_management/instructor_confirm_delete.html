@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    حذف استاد
+{% endblock %}
+
+{% block extra_css %}
+    <link
+        rel="stylesheet"
+        href="{% static 'css/instructors_management/instructors.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+<section class="students-page">
+    <nav class="student-breadcrumb">
+        <a href="{% url 'instructor_management:list' %}">
+            مدیریت استادان
+        </a>
+
+        <span>←</span>
+
+        <a href="{% url 'instructor_management:detail' instructor.id %}">
+            {{ instructor.full_name }}
+        </a>
+
+        <span>←</span>
+        <strong>حذف استاد</strong>
+    </nav>
+
+    <section class="student-delete-card">
+        <div class="student-delete-icon">!</div>
+
+        <span class="students-eyebrow">
+            عملیات حساس
+        </span>
+
+        <h1>حذف استاد</h1>
+
+        <p>
+            آیا از حذف پرونده
+            <strong>«{{ instructor.full_name }}»</strong>
+            اطمینان دارید؟
+        </p>
+
+        <div class="student-delete-summary">
+            <div class="student-avatar">
+                <span>{{ instructor.initials }}</span>
+            </div>
+
+            <div>
+                <strong>{{ instructor.full_name }}</strong>
+
+                <span>
+                    {{ instructor.expertise|default:"تخصص ثبت نشده" }}
+                </span>
+
+                <small dir="ltr">
+                    {{ instructor.email|default:"—" }}
+                </small>
+            </div>
+        </div>
+
+        <div class="student-delete-warning">
+            <strong>پیش از ادامه توجه کنید</strong>
+
+            <p>
+                این عملیات می‌تواند استاد را غیرفعال یا
+                از فهرست سرویس حذف کند. دوره‌های وابسته
+                ممکن است مانع انجام عملیات شوند.
+            </p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="student-delete-actions">
+                <a
+                    class="student-secondary-button"
+                    href="{% url 'instructor_management:detail' instructor.id %}"
+                >
+                    انصراف و بازگشت
+                </a>
+
+                <button
+                    class="student-danger-button"
+                    type="submit"
+                >
+                    تأیید حذف استاد
+                </button>
+            </div>
+        </form>
+    </section>
+</section>
+{% endblock %}
